@@ -1,0 +1,8 @@
+.swap-container {
+    position: relative;
+    left: 100px;
+    top: 100px;
+    width: 400px;
+    min-height: 40px;
+    background-color: azure;
+}
