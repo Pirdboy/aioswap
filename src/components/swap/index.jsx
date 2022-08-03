@@ -1,8 +1,6 @@
 import React, {useState} from "react";
 import "./Swap.css";
 
-let Count = 0;
-
 const Swap = () => {
     const [token0, setToken0] = useState("DAI");
     const [token1, setToken1] = useState("ETH");
@@ -16,8 +14,7 @@ const Swap = () => {
     };
     const clickApprove = e => {
         e.preventDefault();
-        Count++;
-        console.log("You clicked Approve, and Count is",Count);
+        console.log("You clicked Approve");
     }
     const clickSwap = e => {
         e.preventDefault();
@@ -25,7 +22,6 @@ const Swap = () => {
     }
     return (
         <div className="swap-container">
-            <div>{Count}</div>
             <form>
                 <div>from:</div>
                 <div>
