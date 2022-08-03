@@ -1,13 +1,16 @@
 import React from "react";
 import Swap from "../swap";
-import {Center} from '@chakra-ui/react';
+import './layout.css';
 
 const MainLayout = () => {
     return (
         <>
-            <Center bg="#CCCCCC" h="100vh">
+            <div className="header">
+                header
+            </div>
+            <div className="content">
                 <Swap />
-            </Center>
+            </div>
         </>
     )
 };

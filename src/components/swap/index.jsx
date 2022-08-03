@@ -1,50 +1,63 @@
 import React, {useState} from "react";
 import "./swap.css";
-import {
-    Input,
-    Box,
-    Button,
-    ButtonGroup,
-    Select,
-    Flex
-} from '@chakra-ui/react'
 
 const Swap = () => {
-    const [token0, setToken0] = useState("DAI222");
-    console.log("[debug] token0", token0);
-    const handleSelectChange = event => {
-        console.log("[debug] handleSelectChange",event.target.value);
+    const [token0, setToken0] = useState("DAI");
+    const [token1, setToken1] = useState("ETH");
+    const handleToken0Change = event => {
+        console.log("handleToken0Change",event.target.value);
         setToken0(event.target.value);
     };
+    const handleToken1Change = event => {
+        console.log("handleToken1Change",event.target.value);
+        setToken1(event.target.value);
+    };
+    const clickApprove = e => {
+        e.preventDefault();
+        console.log("You clicked Approve");
+    }
+    const clickSwap = e => {
+        e.preventDefault();
+        console.log("You clicked Swap");
+    }
     return (
-        <Box>
-            <p>from</p>
-            <Flex>
-                <Input placeholder="0.0"/>
-                <Select 
-                value="HHHHH"
-                    onChange={handleSelectChange}>
-                    <option value='DAI'>DAI</option>
-                    <option value='ETH'>ETH</option>
-                </Select>
-            </Flex>
-            <p>to</p>
-            <Flex>
-                <Input placeholder="0.0" />
-                <Select value="default">
-                    <option value='DAI'>DAI</option>
-                    <option value='ETH'>ETH</option>
-                </Select>
-            </Flex>
-            <p>Price:  1 ETH = 1651 DAI</p>
-            <ButtonGroup gap="3">
-                <Button colorScheme="blue">Approve</Button>
-                <Button colorScheme="blue">Swap</Button>
-            </ButtonGroup>
-            <p>Minimum Received: 0.241891 DAI</p>
-            <p>{"Router DAI > WETH"}</p>
-        </Box>
-    );
-};
+        <div className="swap-container">
+            <form>
+                <div>from:</div>
+                <div>
+                    <input type="text" name="from" placeholder="0.0" />
+                    <select value={token0} onChange={handleToken0Change}>
+                        <option value="DAI">DAI</option>
+                        <option value="ETH">ETH</option>
+                        <option value="Cur">Cur</option>
+                    </select> 
+                </div>
+                <div>to:</div>
+                <div>
+                    <input type="text" name="to" placeholder="0.0" />
+                    <select value={token1} onChange={handleToken1Change}>
+                        <option value="DAI">DAI</option>
+                        <option value="ETH">ETH</option>
+                        <option value="Cur">Cur</option>
+                    </select> 
+                </div>
+                <div>
+                    Price: 1 ETH = 1651 DAI
+                </div>
+                <div>
+                    <button type="submit" onClick={clickApprove}>Approve</button>
+                    <span>&nbsp;</span>
+                    <button type="submit" onClick={clickSwap}>Swap</button>
+                </div>
+                <div>
+                    Minimum Received: 0.241891 DAI
+                </div>
+                <div>
+                    {`Router: DAI -> WETH`}
+                </div>
+            </form>
+        </div>
+    )
+}
 
 export default Swap;
