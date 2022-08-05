@@ -21,7 +21,6 @@ const RESET = 'RESET';
 function reducer(state, { type, payload }) {
     switch (type) {
         case UPDATE: {
-            console.log("UPDATE reducer", payload);
             return Object.assign({}, state, payload);
         }
         case RESET: {
@@ -38,7 +37,6 @@ export default function Provider({ children }) {
     const contextValue = {
         account: state,
         updateAccount: (address, chainId) => {
-            console.log("updateAccount", address, chainId);
             dispatch({ type: UPDATE, payload: { address, chainId } });
         },
         resetAccount: () => {
