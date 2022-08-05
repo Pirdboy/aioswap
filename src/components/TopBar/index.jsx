@@ -31,6 +31,7 @@ const TopBar = () => {
 
     useEffect(() => {
         checkWalletConnect();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const handleConnectWallet = async(e) => {
