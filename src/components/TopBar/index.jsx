@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import './TopBar.css';
+import { useAccountContext } from "../../contexts/Account";
 
 const ChainIdName = {
     '0x1':'Mainnet',
@@ -10,8 +11,8 @@ const ChainIdName = {
 };
 
 const TopBar = () => {
-    const [currentAccount, setCurrentAccount] = useState('');
-    const [chainId, setChainId] = useState('0x0');
+    const {account, updateAccount} = useAccountContext();
+
     const checkWalletConnect = async () => {
         const { ethereum } = window;
         if (!ethereum) {
@@ -24,9 +25,8 @@ const TopBar = () => {
             return;
         }
         console.log('Found authorized Account: ', accounts[0]);
-        setCurrentAccount(accounts[0]);
         const chainId = await ethereum.request({ method: 'eth_chainId' });
-        setChainId(chainId);
+        updateAccount(accounts[0], chainId);
     };
 
     useEffect(() => {
@@ -41,10 +41,9 @@ const TopBar = () => {
             return;
         }
         try {
-            const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-            setCurrentAccount(accounts[0]);
+            const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
             const chainId = await ethereum.request({ method: 'eth_chainId' });
-            setChainId(chainId);
+            updateAccount(accounts[0], chainId);
         } catch(err) {
             console.log('Error connect metamask',err);
         }
@@ -53,9 +52,9 @@ const TopBar = () => {
         <div className="wallet-container">
             <button type="submit" onClick={handleConnectWallet}>connect wallet</button>
             <span>&nbsp;</span>
-            <span>wallet {currentAccount ? `connected:${currentAccount}` : `not connected`}</span>
+            <span>wallet {account.address ? `connected:${account.address}` : `not connected`}</span>
             <span>&nbsp;&nbsp;&nbsp;|&nbsp;</span>
-            <span>network: {ChainIdName[chainId]}</span>
+            <span>network: {ChainIdName[account.chainId]}</span>
         </div>
     )
 };

@@ -4,12 +4,23 @@ import './index.css';
 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import AccountContextProvider from "./contexts/Account";
+
+function ContextProvider({ children }) {
+    return (
+        <AccountContextProvider>
+            {children}
+        </AccountContextProvider>
+    )
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+    <React.StrictMode>
+        <ContextProvider>
+            <App />
+        </ContextProvider>
+    </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
