@@ -10,7 +10,6 @@ import {
 } from '@uniswap/sdk';
 import { ethers } from "ethers";
 import uniswapRouter02ABI from "../abis/uniswapRouter02ABI.json";
-import curveABI from '../abis/curveABI.json';
 
 const chainId = ChainId.MAINNET;
 const tokenAddressList = {
@@ -28,24 +27,52 @@ const privateKeys = [
     "0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6"
 ];
 const uniswapRouter02Address = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
-const UNI_DAI_PAIR = '0xf00e80f0de9aea0b33aa229a4014572777e422ee';
-const decimals = 1000000000000000000;
+const decimals = 1e18;
 
 const privateKey = privateKeys[1];
 
-const swapToken = async (token0Name, token0Input, token1Name, provider, signer) => {
-    let token0Amount = ethers.BigNumber.from((parseFloat(token0Input) * decimals).toString());
-    const token0 = !tokenAddressList[token0Name] ? null :
-        await Fetcher.fetchTokenData(chainId, tokenAddressList[token0Name], provider);
-    const token1 = !tokenAddressList[token1Name] ? null :
-        await Fetcher.fetchTokenData(chainId, tokenAddressList[token1Name], provider);
+export const estimateTrade = async (token0Symbol, token0Input, token1Symbol) => {
+    // 暂时先临时创建provider
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    let token0Amount = ethers.utils.parseEther(token0Input);
+    const token0 = !tokenAddressList[token0Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenAddressList[token0Symbol], provider);
+    const token1 = !tokenAddressList[token1Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenAddressList[token1Symbol], provider);
     const pair = await Fetcher.fetchPairData(token0, token1, provider);
     const route = new Route([pair], token0);
     const trade = new Trade(route, new TokenAmount(token0, token0Amount), TradeType.EXACT_INPUT);
-    console.log(`Swap ${token0Name} to ${token1Name} midPrice ${route.midPrice.toSignificant(6)}`);
-    console.log(`Swap ${token0Name} to ${token1Name} midPrice invert ${route.midPrice.invert().toSignificant(6)}`);
-    console.log(`Swap ${token0Name} to ${token1Name} executionPrice ${trade.executionPrice.toSignificant(6)}`);
-    console.log(`Swap ${token0Name} to ${token1Name} nextMidPrice ${trade.nextMidPrice.toSignificant(6)}`);
+
+    // price,暂时先用executionPrice
+    const price = trade.executionPrice.toSignificant(6);
+    const priceInvert = trade.executionPrice.invert().toSignificant(6);
+
+    // priceImpact
+    const priceImpact = trade.priceImpact.toFixed(2);
+
+    // amountOut without slippage
+    const amountOut = trade.outputAmount.toSignificant(6);
+
+    // minimum received
+    const slippageTolerance = new Percent('50', '10000') // 50 bips, 1 bip(基点) = 0.01%
+    const minimumAmountOut = trade.minimumAmountOut(slippageTolerance).toSignificant(6);
+
+    return {price, priceInvert, priceImpact, minimumAmountOut, amountOut};
+};
+
+const swapToken = async (token0Symbol, token0Input, token1Symbol, provider, signer) => {
+    let token0Amount = ethers.BigNumber.from((parseFloat(token0Input) * decimals).toString());
+    const token0 = !tokenAddressList[token0Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenAddressList[token0Symbol], provider);
+    const token1 = !tokenAddressList[token1Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenAddressList[token1Symbol], provider);
+    const pair = await Fetcher.fetchPairData(token0, token1, provider);
+    const route = new Route([pair], token0);
+    const trade = new Trade(route, new TokenAmount(token0, token0Amount), TradeType.EXACT_INPUT);
+    console.log(`Swap ${token0Symbol} to ${token1Symbol} midPrice ${route.midPrice.toSignificant(6)}`);
+    console.log(`Swap ${token0Symbol} to ${token1Symbol} midPrice invert ${route.midPrice.invert().toSignificant(6)}`);
+    console.log(`Swap ${token0Symbol} to ${token1Symbol} executionPrice ${trade.executionPrice.toSignificant(6)}`);
+    console.log(`Swap ${token0Symbol} to ${token1Symbol} nextMidPrice ${trade.nextMidPrice.toSignificant(6)}`);
 
     const signerAddress = await signer.getAddress();
 
@@ -64,7 +91,7 @@ const swapToken = async (token0Name, token0Input, token1Name, provider, signer) 
         uniswapRouter02ABI,
         signer
     );
-    if (token0Name === 'ETH') {
+    if (token0Symbol === 'ETH') {
         console.log("swapExactETHForTokens");
         const tx = await uniswapRouter02.swapExactETHForTokens(
             amountOutMin,
@@ -76,7 +103,7 @@ const swapToken = async (token0Name, token0Input, token1Name, provider, signer) 
         console.log(`Transaction hash: ${tx.hash}`);
         const receipt = await tx.wait();
         console.log(`Transaction was mined in block ${receipt.blockNumber}`);
-    } else if (token1Name === 'ETH') {
+    } else if (token1Symbol === 'ETH') {
         console.log('swapExactTokensForETH',path);
         const tx = await uniswapRouter02.swapExactTokensForETH(
             inputAmount,
@@ -143,7 +170,7 @@ export const ApproveToken = async (tokenName, amount) => {
 
     let tx = await erc20Contract.approve(
         uniswapRouter02Address,
-        ethers.BigNumber.from(amount),
+        ethers.BigNumber.from((parseFloat(amount) * decimals).toString()),
         {
             gasPrice: 20e9,
             gasLimit: 3000000
@@ -154,18 +181,4 @@ export const ApproveToken = async (tokenName, amount) => {
     console.log(`Transaction was mined in block ${receipt.blockNumber}`);
     let allowance = await erc20Contract.allowance(owner, uniswapRouter02Address);
     console.log(`allowance[${owner}][${uniswapRouter02Address}] = ${allowance}`);
-
-    // tx = await erc20Contract.approve(
-    //     UNI_DAI_PAIR,
-    //     ethers.BigNumber.from(amount),
-    //     {
-    //         gasPrice: 20e9,
-    //         gasLimit: 3000000
-    //     }
-    // );
-    // console.log(`Transaction hash: ${tx.hash}`);
-    // receipt = await tx.wait();
-    // console.log(`Transaction was mined in block ${receipt.blockNumber}`);
-    // allowance = await erc20Contract.allowance(owner, UNI_DAI_PAIR);
-    // console.log(`allowance[${owner}][${UNI_DAI_PAIR}] = ${allowance}`);
 }
