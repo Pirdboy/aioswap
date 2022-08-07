@@ -10,16 +10,9 @@ import {
 } from '@uniswap/sdk';
 import { ethers } from "ethers";
 import uniswapRouter02ABI from "../abis/uniswapRouter02ABI.json";
+import tokenList from './TokenList';
 
 const chainId = ChainId.MAINNET;
-const tokenAddressList = {
-    "UNI": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-    "CRV": "0xD533a949740bb3306d119CC777fa900bA034cd52",
-    "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-    "LINK": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
-    "AAVE": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
-    "ETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",  // WETH
-};
 const privateKeys = [
     "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
     "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
@@ -31,14 +24,14 @@ const decimals = 1e18;
 
 const privateKey = privateKeys[1];
 
-export const estimateTrade = async (token0Symbol, token0Input, token1Symbol) => {
+export const estimateTrade = async (token0Symbol, token0Input, token1Symbol, slippage) => {
     // 暂时先临时创建provider
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     let token0Amount = ethers.utils.parseEther(token0Input);
-    const token0 = !tokenAddressList[token0Symbol] ? null :
-        await Fetcher.fetchTokenData(chainId, tokenAddressList[token0Symbol], provider);
-    const token1 = !tokenAddressList[token1Symbol] ? null :
-        await Fetcher.fetchTokenData(chainId, tokenAddressList[token1Symbol], provider);
+    const token0 = !tokenList[token0Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenList[token0Symbol], provider);
+    const token1 = !tokenList[token1Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenList[token1Symbol], provider);
     const pair = await Fetcher.fetchPairData(token0, token1, provider);
     const route = new Route([pair], token0);
     const trade = new Trade(route, new TokenAmount(token0, token0Amount), TradeType.EXACT_INPUT);
@@ -54,7 +47,9 @@ export const estimateTrade = async (token0Symbol, token0Input, token1Symbol) => 
     const amountOut = trade.outputAmount.toSignificant(6);
 
     // minimum received
-    const slippageTolerance = new Percent('50', '10000') // 50 bips, 1 bip(基点) = 0.01%
+    // Percent(分子,分母)
+    const slippageTolerance = new Percent(Math.round(parseFloat(slippage)*100), '10000') // 50 bips, 1 bip(基点) = 0.01%
+    console.log('slippageTolerance',slippageTolerance.toSignificant(3));
     const minimumAmountOut = trade.minimumAmountOut(slippageTolerance).toSignificant(6);
 
     return {price, priceInvert, priceImpact, minimumAmountOut, amountOut};
@@ -62,10 +57,10 @@ export const estimateTrade = async (token0Symbol, token0Input, token1Symbol) => 
 
 const swapToken = async (token0Symbol, token0Input, token1Symbol, provider, signer) => {
     let token0Amount = ethers.BigNumber.from((parseFloat(token0Input) * decimals).toString());
-    const token0 = !tokenAddressList[token0Symbol] ? null :
-        await Fetcher.fetchTokenData(chainId, tokenAddressList[token0Symbol], provider);
-    const token1 = !tokenAddressList[token1Symbol] ? null :
-        await Fetcher.fetchTokenData(chainId, tokenAddressList[token1Symbol], provider);
+    const token0 = !tokenList[token0Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenList[token0Symbol], provider);
+    const token1 = !tokenList[token1Symbol] ? null :
+        await Fetcher.fetchTokenData(chainId, tokenList[token1Symbol], provider);
     const pair = await Fetcher.fetchPairData(token0, token1, provider);
     const route = new Route([pair], token0);
     const trade = new Trade(route, new TokenAmount(token0, token0Amount), TradeType.EXACT_INPUT);
@@ -152,7 +147,7 @@ export const ApproveToken = async (tokenName, amount) => {
 
     const metamaskProvider = new ethers.providers.Web3Provider(window.ethereum);
     const metamaskSigner = metamaskProvider.getSigner();
-    const tokenAddress = tokenAddressList[tokenName];
+    const tokenAddress = tokenList[tokenName];
 
     const gasPrice = await metamaskProvider.getGasPrice();
     console.log("gasPrice", gasPrice.toString());
