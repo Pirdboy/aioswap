@@ -7,6 +7,7 @@ const ChainIdName = {
     '0x1':'Mainnet',
     '0x3':'Ropsten',
     '0x4':'Rinkeby',
+    '0x7a69':'hardhat',
     '0x0':'none'
 };
 
@@ -26,6 +27,7 @@ const TopBar = () => {
         }
         console.log('Found authorized Account: ', accounts[0]);
         const chainId = await ethereum.request({ method: 'eth_chainId' });
+        console.log('chainId',chainId);
         updateAccount(accounts[0], chainId);
     };
 
