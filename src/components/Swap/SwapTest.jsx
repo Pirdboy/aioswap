@@ -1,12 +1,25 @@
 import React from "react";
 
-
 import {
+    SwapToken,
     SwapTokenUseMetaMask,
     ApproveToken
 } from "../../utils/SwapTester";
 
+import tokenList from "../../utils/TokenList";
+
 const SwapTest = () => {
+    const test_SwapEthForOthers = async e => {
+        e.preventDefault();
+        const tokens = Object.keys(tokenList);
+        for(let i=0;i<tokens.length;i++) {
+            if(tokens[i] === 'ETH') {
+                continue;
+            }
+            await SwapToken('ETH', '2', tokens[i]);
+        }
+    };
+
     // 换一些DAI、AAVE、LINK、UNI
     const test_SwapSomeETHForAAVE =  async e => {
         e.preventDefault();
@@ -73,7 +86,8 @@ const SwapTest = () => {
     return (
         <div>
             <p>------------ Swap测试 --------------</p>
-            <button type="submit" onClick={test_SwapSomeETHForAAVE}>test_SwapSomeETHForAAVE</button>
+            <button type="submit" onClick={test_SwapEthForOthers}>test_SwapEthForOthers</button>
+            {/* <button type="submit" onClick={test_SwapSomeETHForAAVE}>test_SwapSomeETHForAAVE</button>
             &nbsp;
             <button type="submit" onClick={test_SwapSomeETHForLINK}>test_SwapSomeETHForLINK</button>
             &nbsp;
@@ -85,7 +99,7 @@ const SwapTest = () => {
             &nbsp;
             <button type="submit" onClick={test_SwapSomeDAIForUNI}>test_SwapSomeDAIForUNI</button>
             &nbsp;
-            <button type="submit" onClick={test_SwapSomeDAIForETH}>test_SwapSomeDAIForETH</button>
+            <button type="submit" onClick={test_SwapSomeDAIForETH}>test_SwapSomeDAIForETH</button> */}
             <p>------ Approve测试 -----</p>
             <button type="submit" onClick={test_ApproveTokenUNI}>test_ApproveTokenUNI</button>
             &nbsp;
