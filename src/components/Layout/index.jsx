@@ -1,5 +1,5 @@
 import React from "react";
-import Swap from "../Swap";
+import Swap from "../SwapTemp";
 import TopBar from "../TopBar";
 
 import './Layout.css';
