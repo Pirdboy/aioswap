@@ -6,12 +6,20 @@ import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 
 const TokenInput = ({
     tokenSymbol,
-    onInputChange,
+    onUserInput,
     value
 }) => {
+    const enforceNumber = e => {
+        const value = e.target.value;
+        console.log("enforceNumber, value",value);
+        if ((value === '' || value.match(/^[0-9]+\.?[0-9]*$/)) && value.length < 16) {
+            console.log("enforceNumber control");
+            onUserInput(value);
+        }
+    };
     return (
         <Flex>
-            <Input placeholder="0.0" onChange={onInputChange} />
+            <Input placeholder="0.0" value={value} onChange={enforceNumber} />
             <Button colorScheme="blackAlpha" rightIcon={<ChevronDownIcon />}>
                 {tokenSymbol ?? 'Select Token'}
             </Button>
@@ -38,8 +46,8 @@ const Swap = () => {
     const [tokenOutBalance, setTokenOutBalance] = useState('0');
     const [tokenInSymbol, setTokenInSymbol] = useState('ETH');
     const [tokenOutSymbol, setTokenOutSymbol] = useState('1INCH');
-    const [tokenInValue, setTokenInValue] = useState();
-    const [tokenOutValue, setTokenOutValue] = useState();
+    const [tokenInValue, setTokenInValue] = useState('');
+    const [tokenOutValue, setTokenOutValue] = useState('');
     const [price, setPrice] = useState('1.147');
     const [priceInvert, setPriceInvert] = useState('0.003222');
     const [priceShowInvert, setPriceShowInvert] = useState(false);
@@ -60,6 +68,13 @@ const Swap = () => {
             )
         }
     });
+
+    const onTokenInUserInput = (val) => {
+        setTokenInValue(val);
+    };
+    const onTokenOutUserInput = (val) => {
+        setTokenOutValue(val);
+    };
     return (
         <Center bg="gray.600" w="100%" pt="60px">
             <Box borderRadius="10px" padding="4px 10px" bg="black" color="white" minW="400px" minH="100px">
@@ -81,7 +96,7 @@ const Swap = () => {
                         <Center>From</Center>
                         <Center>Balance: {tokenInBalance}</Center>
                     </Flex>
-                    <TokenInput tokenSymbol={tokenInSymbol} />
+                    <TokenInput tokenSymbol={tokenInSymbol} value={tokenInValue} onUserInput={onTokenInUserInput} />
                 </Box>
                 {/* token inversion button */}
                 <Box>
@@ -96,9 +111,9 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>To</Center>
-                        <Center>Balance: {tokenInBalance}</Center>
+                        <Center>Balance: {tokenOutBalance}</Center>
                     </Flex>
-                    <TokenInput tokenSymbol={tokenOutSymbol} />
+                    <TokenInput tokenSymbol={tokenOutSymbol} value={tokenOutValue} onUserInput={onTokenOutUserInput} />
                 </Box>
                 <Box h="10px"></Box>
                 {/* Route choose */}
