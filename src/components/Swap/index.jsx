@@ -3,26 +3,28 @@ import { Box, Flex, Center, Input, IconButton, Button, Divider, Icon } from '@ch
 import { SettingsIcon, ChevronDownIcon, ArrowDownIcon } from '@chakra-ui/icons';
 import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 
+import { ModalTokenSelect } from "../Modal";
+import NumberInput from "../NumberInput";
+
 
 const TokenInput = ({
+    value,
     tokenSymbol,
-    onUserInput,
-    value
+    onInputValue,
+    onSelectToken,
 }) => {
-    const enforceNumber = e => {
-        const value = e.target.value;
-        console.log("enforceNumber, value",value);
-        if ((value === '' || value.match(/^[0-9]+\.?[0-9]*$/)) && value.length < 16) {
-            console.log("enforceNumber control");
-            onUserInput(value);
-        }
-    };
+    const [showModal, setShowModal] = useState(false);
     return (
         <Flex>
-            <Input placeholder="0.0" value={value} onChange={enforceNumber} />
-            <Button colorScheme="blackAlpha" rightIcon={<ChevronDownIcon />}>
+            <NumberInput onInputValue={onInputValue} value={value} />
+            <Button colorScheme="blackAlpha" rightIcon={<ChevronDownIcon />} onClick={() => setShowModal(true)}>
                 {tokenSymbol ?? 'Select Token'}
             </Button>
+            <ModalTokenSelect isOpen={showModal} onSelectToken={(tokenObj) => {
+                console.log('selectToken', tokenObj);
+                setShowModal(false);
+                onSelectToken && onSelectToken(tokenObj);
+            }} />
         </Flex>
     )
 };
@@ -69,12 +71,26 @@ const Swap = () => {
         }
     });
 
-    const onTokenInUserInput = (val) => {
+    const onTokenInInput = (val) => {
         setTokenInValue(val);
     };
-    const onTokenOutUserInput = (val) => {
+    const onTokenOutInput = (val) => {
         setTokenOutValue(val);
     };
+    const onTokenInSelect = (tokenObj) => {
+        const symbol = tokenObj?.symbol;
+        if(!symbol || symbol === tokenInSymbol) {
+            return;
+        }
+        setTokenInSymbol(symbol);
+    }
+    const onTokenOutSelect = (tokenObj) => {
+        const symbol = tokenObj?.symbol;
+        if(!symbol || symbol === tokenInSymbol) {
+            return;
+        }
+        setTokenOutSymbol(symbol);
+    }
     return (
         <Center bg="gray.600" w="100%" pt="60px">
             <Box borderRadius="10px" padding="4px 10px" bg="black" color="white" minW="400px" minH="100px">
@@ -96,7 +112,12 @@ const Swap = () => {
                         <Center>From</Center>
                         <Center>Balance: {tokenInBalance}</Center>
                     </Flex>
-                    <TokenInput tokenSymbol={tokenInSymbol} value={tokenInValue} onUserInput={onTokenInUserInput} />
+                    <TokenInput 
+                        tokenSymbol={tokenInSymbol} 
+                        value={tokenInValue} 
+                        onInputValue={onTokenInInput} 
+                        onSelectToken={onTokenInSelect}
+                    />
                 </Box>
                 {/* token inversion button */}
                 <Box>
@@ -113,7 +134,12 @@ const Swap = () => {
                         <Center>To</Center>
                         <Center>Balance: {tokenOutBalance}</Center>
                     </Flex>
-                    <TokenInput tokenSymbol={tokenOutSymbol} value={tokenOutValue} onUserInput={onTokenOutUserInput} />
+                    <TokenInput 
+                        tokenSymbol={tokenOutSymbol} 
+                        value={tokenOutValue} 
+                        onInputValue={onTokenOutInput}
+                        onSelectToken={onTokenOutSelect}
+                    />
                 </Box>
                 <Box h="10px"></Box>
                 {/* Route choose */}

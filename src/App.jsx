@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import './App.css';
 import Header from "./components/Header";
 import Swap from "./components/Swap";
-import { ModalWarning } from "./components/Modal";
+import { ModalWarning, ModalTokenSelect } from "./components/Modal";
 import { Box, Button, ChakraProvider } from '@chakra-ui/react';
 
 import {
@@ -61,6 +61,7 @@ const App = () => {
 
     const [showMetaMaskWarning, setShowMetaMaskWarning] = useState(false);
     const [showNetworkWarning, setShowNetworkWarning] = useState(false);
+    const [showTokenList, setShowTokenList] = useState(false);
 
     return (
         <ChakraProvider>
@@ -80,6 +81,7 @@ const App = () => {
                     >
                         {`Your wallet is not corrected to the right network, please connect to the hardhat local network at http://localhost:8545`}
                     </ModalWarning>
+                    <ModalTokenSelect isOpen={showTokenList} onClose={() => setShowTokenList(false)} />
                     <Header />
                     <Swap />
                 </Background>
