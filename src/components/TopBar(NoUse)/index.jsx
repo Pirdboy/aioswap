@@ -7,7 +7,7 @@ const ChainIdName = {
     '0x1':'Mainnet',
     '0x3':'Ropsten',
     '0x4':'Rinkeby',
-    '0x7a69':'hardhat',
+    '0x7a69':'hardhat', // 31337
     '0x0':'none'
 };
 

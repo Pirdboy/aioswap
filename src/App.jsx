@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import './App.css';
 import Header from "./components/Header";
 import Swap from "./components/Swap";
-import { ModalOne } from "./components/Modal";
+import { ModalWarning } from "./components/Modal";
 import { Box, Button, ChakraProvider } from '@chakra-ui/react';
 
 import {
@@ -34,6 +34,7 @@ const hardhatProvider = new ethers.providers.JsonRpcProvider("http://localhost:8
 
 // autoConnect:true会导致一些bug
 // 比如wagmi的useBalance等hook会出错
+// useBalance等hook必须在手动connect之后才能使用
 const wagmiClient = createClient({
     autoConnect: false,
     connectors: [
@@ -65,20 +66,20 @@ const App = () => {
         <ChakraProvider>
             <WagmiConfig client={wagmiClient}>
                 <Background>
-                    <ModalOne
+                    <ModalWarning
                         title="Metamask not detected"
                         isOpen={showMetaMaskWarning}
                         onClose={() => setShowMetaMaskWarning(false)}
                     >
                         {`You should install metamask extension first, and refresh this page.`}
-                    </ModalOne>
-                    <ModalOne
+                    </ModalWarning>
+                    <ModalWarning
                         title="Wrong Network"
                         isOpen={showNetworkWarning}
                         onClose={() => setShowNetworkWarning(false)}
                     >
                         {`Your wallet is not corrected to the right network, please connect to the hardhat local network at http://localhost:8545`}
-                    </ModalOne>
+                    </ModalWarning>
                     <Header />
                     <Swap />
                 </Background>

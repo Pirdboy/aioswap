@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from '@chakra-ui/react';
 
-const ModalOne = ({ isOpen, title, onClose, children }) => {
+const ModalWarning = ({ isOpen, title, onClose, children }) => {
     return (
         <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
@@ -21,4 +21,4 @@ const ModalOne = ({ isOpen, title, onClose, children }) => {
     )
 };
 
-export { ModalOne };
+export { ModalWarning };

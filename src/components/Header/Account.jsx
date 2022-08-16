@@ -23,15 +23,36 @@ function clippedAddress(addr) {
     return addr && addr.slice(0, 6) + '...' + addr.slice(addr.length - 4, addr.length);
 }
 
-const Account = () => {
+// wagmi useBalance和useChainId有bug
+// 连接和未连接的情况必须分开
+const AccountNotConnected = () => {
     const { connect, connectors } = useConnect();
-    const { address, isConnected } = useAccount();
-    // console.log("address", address, "isConnected", isConnected, "connector:", connector);
+    return (
+        <>
+            <Button colorScheme='blue' size='sm' onClick={() => connect({ connector: connectors[0] })}>Connect Wallet</Button>
+        </>
+    )
+};
+
+const AccountConnected = () => {
+    const { address, isConnected, connector } = useAccount();
+    console.log("address",address,"isConnected",isConnected,"connector:",connector);
 
     const { data: balanceData } = useBalance({
         addressOrName: address,
     });
     const { disconnect } = useDisconnect();
+    return (
+        <>
+            <Center bg="black" color="white" h="100%">{balanceData?.formatted} {balanceData?.symbol}</Center>
+            <Center bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
+            <Button colorScheme='yellow' size='sm' onClick={() => disconnect()}>Disconnect</Button>
+        </>
+    )
+};
+
+const Account = () => {
+    const { isConnected } = useAccount();
     return (
         <Center justifyContent="space-between">
             {/* network choose(暂时先只支持hardhat) */}
@@ -53,13 +74,9 @@ const Account = () => {
             {/* Account Info */}
             {
                 isConnected ? (
-                    <>
-                        <Center bg="black" color="white" h="100%">{balanceData?.formatted} {balanceData?.symbol}</Center>
-                        <Center bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
-                        <Button colorScheme='yellow' size='sm' onClick={() => disconnect()}>Disconnect</Button>
-                    </>
+                    <AccountConnected />
                 ) : (
-                    <Button colorScheme='blue' size='sm' onClick={() => connect({ connector: connectors[0] })}>Connect Wallet</Button>
+                    <AccountNotConnected />
                 )
             }
         </Center>
