@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import React, { useEffect } from "react";
 import './TopBar.css';
-import { useAccountContext } from "../../contexts/Account";
+import { useAccountContext } from "../contexts/Account";
 
 const ChainIdName = {
     '0x1':'Mainnet',

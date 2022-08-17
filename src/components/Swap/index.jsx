@@ -194,6 +194,7 @@ const Swap = () => {
                     <Button colorScheme='blue'>Approve</Button>
                     <Box w="10px"></Box>
                     <Button colorScheme='blue'>Swap</Button>
+                    
                 </Center>
                 {/* trade estimate display */}
                 <Box>
