@@ -18,6 +18,7 @@ const SwapTest = () => {
             }
             await SwapToken('ETH', '2', tokens[i]);
         }
+        console.log("finished....");
     };
 
     // 换一些DAI、AAVE、LINK、UNI

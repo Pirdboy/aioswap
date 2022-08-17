@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import './App.css';
 import Header from "./components/Header";
 import Swap from "./components/Swap";
+import SwapTest from "./components/Swap/SwapTest";
 import { ModalWarning, ModalTokenSelect } from "./components/Modal";
 import { Box, Button, ChakraProvider } from '@chakra-ui/react';
 
@@ -19,7 +20,8 @@ import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 
 const ethers = require('ethers');
-const hardhatProvider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+// const hardhatProvider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+const localProvider = new ethers.providers.StaticJsonRpcProvider("http://localhost:8545");
 
 // configureChains wraps the providers that you provide into an ethers.js FallbackProvider
 // const {chains, provider:localProvider} = configureChains(
@@ -42,7 +44,7 @@ const wagmiClient = createClient({
             chains: [chain.hardhat]
         }),
     ],
-    provider: hardhatProvider,
+    provider: localProvider,
 });
 
 const Background = ({ children }) => {
@@ -52,7 +54,6 @@ const Background = ({ children }) => {
         </Box>
     )
 }
-
 
 const App = () => {
     useEffect(() => {
@@ -84,6 +85,7 @@ const App = () => {
                     <ModalTokenSelect isOpen={showTokenList} onClose={() => setShowTokenList(false)} />
                     <Header />
                     <Swap />
+                    <SwapTest />
                 </Background>
             </WagmiConfig>
         </ChakraProvider>

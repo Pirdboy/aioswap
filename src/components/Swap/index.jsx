@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Flex, Center, Input, IconButton, Button, Divider, Icon } from '@chakra-ui/react';
 import { SettingsIcon, ChevronDownIcon, ArrowDownIcon } from '@chakra-ui/icons';
 import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 
 import { ModalTokenSelect } from "../Modal";
 import NumberInput from "../NumberInput";
+import { useBalance, useProvider, useAccount } from 'wagmi';
 
+import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
 
 const TokenInput = ({
     value,
@@ -21,7 +23,6 @@ const TokenInput = ({
                 {tokenSymbol ?? 'Select Token'}
             </Button>
             <ModalTokenSelect isOpen={showModal} onSelectToken={(tokenObj) => {
-                console.log('selectToken', tokenObj);
                 setShowModal(false);
                 onSelectToken && onSelectToken(tokenObj);
             }} />
@@ -43,11 +44,35 @@ const SwapChoice = ({
     )
 };
 
+const TokenBalanceConnected = ({ tokenInfo }) => {
+    const { address } = useAccount();
+    let arg = {
+        addressOrName: address
+    };
+    // ERC20
+    if (tokenInfo?.symbol !== 'ETH') {
+        arg.token = tokenInfo?.address;
+    }
+    const {data} = useBalance(arg);
+    return (
+        <>
+            <Center>Balace: {data?.formatted}</Center>
+        </>
+    )
+};
+
+const TokenBalanceNotConnected = () => {
+    return (
+        <>
+            <Center>Balance: 0</Center>
+        </>
+    )
+};
+
 const Swap = () => {
-    const [tokenInBalance, setTokenInBalance] = useState('0');
-    const [tokenOutBalance, setTokenOutBalance] = useState('0');
-    const [tokenInSymbol, setTokenInSymbol] = useState('ETH');
-    const [tokenOutSymbol, setTokenOutSymbol] = useState('1INCH');
+    const { isConnected } = useAccount();
+    const [tokenInInfo, setTokenInInfo] = useState(DefaultTokenIn);
+    const [tokenOutInfo, setTokenOutInfo] = useState(DefaultTokenOut);
     const [tokenInValue, setTokenInValue] = useState('');
     const [tokenOutValue, setTokenOutValue] = useState('');
     const [price, setPrice] = useState('1.147');
@@ -70,7 +95,6 @@ const Swap = () => {
             )
         }
     });
-
     const onTokenInInput = (val) => {
         setTokenInValue(val);
     };
@@ -78,19 +102,20 @@ const Swap = () => {
         setTokenOutValue(val);
     };
     const onTokenInSelect = (tokenObj) => {
-        const symbol = tokenObj?.symbol;
-        if(!symbol || symbol === tokenInSymbol) {
+        if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenInInfo.symbol) {
             return;
         }
-        setTokenInSymbol(symbol);
+        console.log('onTokenInSelect', tokenObj);
+        setTokenInInfo(tokenObj);
     }
     const onTokenOutSelect = (tokenObj) => {
-        const symbol = tokenObj?.symbol;
-        if(!symbol || symbol === tokenInSymbol) {
+        if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenOutInfo.symbol) {
             return;
         }
-        setTokenOutSymbol(symbol);
+        console.log('onTokenOutSelect', tokenObj);
+        setTokenOutInfo(tokenObj);
     }
+
     return (
         <Center bg="gray.600" w="100%" pt="60px">
             <Box borderRadius="10px" padding="4px 10px" bg="black" color="white" minW="400px" minH="100px">
@@ -110,12 +135,12 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>From</Center>
-                        <Center>Balance: {tokenInBalance}</Center>
+                        {isConnected ? (<TokenBalanceConnected tokenInfo={tokenInInfo} />) : (<TokenBalanceNotConnected />)}
                     </Flex>
-                    <TokenInput 
-                        tokenSymbol={tokenInSymbol} 
-                        value={tokenInValue} 
-                        onInputValue={onTokenInInput} 
+                    <TokenInput
+                        tokenSymbol={tokenInInfo.symbol}
+                        value={tokenInValue}
+                        onInputValue={onTokenInInput}
                         onSelectToken={onTokenInSelect}
                     />
                 </Box>
@@ -132,11 +157,11 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>To</Center>
-                        <Center>Balance: {tokenOutBalance}</Center>
+                        {isConnected ? (<TokenBalanceConnected tokenInfo={tokenOutInfo} />) : (<TokenBalanceNotConnected />)}
                     </Flex>
-                    <TokenInput 
-                        tokenSymbol={tokenOutSymbol} 
-                        value={tokenOutValue} 
+                    <TokenInput
+                        tokenSymbol={tokenOutInfo.symbol}
+                        value={tokenOutValue}
                         onInputValue={onTokenOutInput}
                         onSelectToken={onTokenOutSelect}
                     />
@@ -152,8 +177,8 @@ const Swap = () => {
                     <Center>Price</Center>
                     <Center>
                         {priceShowInvert ?
-                            `1 ${tokenOutSymbol} = ${priceInvert} ${tokenInSymbol}` :
-                            `1 ${tokenInSymbol} = ${price} ${tokenOutSymbol}`}
+                            `1 ${tokenOutInfo.symbol} = ${priceInvert} ${tokenInInfo.symbol}` :
+                            `1 ${tokenInInfo.symbol} = ${price} ${tokenOutInfo.symbol}`}
                         <IconButton
                             pl="10px"
                             aria-label="transfer price"
@@ -174,7 +199,7 @@ const Swap = () => {
                 <Box>
                     <Flex justify="space-between">
                         <Center>Minimum received</Center>
-                        <Center>{`${minimumReceived} ${tokenOutSymbol}`}</Center>
+                        <Center>{`${minimumReceived} ${tokenOutInfo.symbol}`}</Center>
                     </Flex>
                     <Flex justify="space-between">
                         <Center>Price Impact</Center>

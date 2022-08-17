@@ -1,6 +1,11 @@
 const TokenList = [
     {
         "chainId": 1,
+        "name": "Ether",
+        "symbol":"ETH",
+    },
+    {
+        "chainId": 1,
         "address": "0x111111111117dC0aa78b770fA6A738034120C302",
         "name": "1inch",
         "symbol": "1INCH",
@@ -1411,5 +1416,18 @@ const RecommandedTokenList = [
     },
 ];
 
+const DefaultTokenIn = {
+    "name": "Ether",
+    "symbol":"ETH",
+};
+const DefaultTokenOut =     {
+    "chainId": 1,
+    "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    "name": "Dai Stablecoin",
+    "symbol": "DAI",
+    "decimals": 18,
+    "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png"
+}
+
 export default TokenList;
-export { RecommandedTokenList };
+export { RecommandedTokenList, DefaultTokenIn, DefaultTokenOut };

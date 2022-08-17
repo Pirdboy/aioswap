@@ -51,7 +51,6 @@ const ModalTokenSelect = ({ isOpen, onSelectToken }) => {
         setSearchText(e.target.value);
     };
     const tokenFilter = (t, patt) => {
-        // 有时间可以优化一下token搜索的性能
         if (!patt) {
             return true;
         }

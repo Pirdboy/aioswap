@@ -1,7 +1,6 @@
 import {
     ChainId,
     Fetcher,
-    WETH,
     Route,
     Trade,
     TokenAmount,
