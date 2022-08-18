@@ -5,9 +5,11 @@ import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 
 import { ModalTokenSelect } from "../Modal";
 import NumberInput from "../NumberInput";
-import { useBalance, useProvider, useAccount } from 'wagmi';
-
 import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
+
+import {
+
+} from "../../globals/EthersWrap";
 
 const TokenInput = ({
     value,
@@ -44,36 +46,13 @@ const SwapChoice = ({
     )
 };
 
-const TokenBalanceConnected = ({ tokenInfo }) => {
-    const { address } = useAccount();
-    let arg = {
-        addressOrName: address
-    };
-    // ERC20
-    if (tokenInfo?.symbol !== 'ETH') {
-        arg.token = tokenInfo?.address;
-    }
-    const {data} = useBalance(arg);
-    return (
-        <>
-            <Center>Balace: {data?.formatted}</Center>
-        </>
-    )
-};
-
-const TokenBalanceNotConnected = () => {
-    return (
-        <>
-            <Center>Balance: 0</Center>
-        </>
-    )
-};
-
 const Swap = () => {
-    const { isConnected } = useAccount();
+    const [isConnected, setConnected] = useState(false);
     const [tokenInInfo, setTokenInInfo] = useState(DefaultTokenIn);
-    const [tokenOutInfo, setTokenOutInfo] = useState(DefaultTokenOut);
+    const [tokenInBalance, setTokenInBalance] = useState('0');
     const [tokenInValue, setTokenInValue] = useState('');
+    const [tokenOutInfo, setTokenOutInfo] = useState(DefaultTokenOut);
+    const [tokenOutBalance, setTokenOutBalance] = useState('0');
     const [tokenOutValue, setTokenOutValue] = useState('');
     const [price, setPrice] = useState('1.147');
     const [priceInvert, setPriceInvert] = useState('0.003222');
@@ -81,6 +60,7 @@ const Swap = () => {
     const [minimumReceived, setMinimumReceived] = useState('2.303');
     const [priceImpact, setPriceImpact] = useState('0.36%');
     const [tradePath, setTradePath] = useState(['USDC', 'WETH', '1INCH']);
+
     const tradePathDisplay = tradePath.map((e, i) => {
         if (i > 0) {
             return (
@@ -116,6 +96,26 @@ const Swap = () => {
         setTokenOutInfo(tokenObj);
     }
 
+    // 问题: 连接、账户地址等状态,在Account、Swap中都要用到
+    const fetchTokenInBalance = async () => {
+
+    };
+
+    const fetchTokenOutBalance = async () => {
+
+    };
+    // useEffect(() => {
+
+    // }, []);
+
+    // useEffect(() => {
+
+    // }, []);
+
+    // useEffect(() => {
+
+    // }, []);
+
     return (
         <Center bg="gray.600" w="100%" pt="60px">
             <Box borderRadius="10px" padding="4px 10px" bg="black" color="white" minW="400px" minH="100px">
@@ -135,7 +135,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>From</Center>
-                        {isConnected ? (<TokenBalanceConnected tokenInfo={tokenInInfo} />) : (<TokenBalanceNotConnected />)}
+                        <Center>{`Balance ${tokenInBalance}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenInInfo.symbol}
@@ -157,7 +157,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>To</Center>
-                        {isConnected ? (<TokenBalanceConnected tokenInfo={tokenOutInfo} />) : (<TokenBalanceNotConnected />)}
+                        <Center>{`Balance ${tokenOutBalance}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenOutInfo.symbol}

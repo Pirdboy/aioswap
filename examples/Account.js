@@ -18,6 +18,7 @@ const initialState = {
 const UPDATE = 'UPDATE';
 const RESET = 'RESET';
 
+// reducer里不应该有side effect
 function reducer(state, { type, payload }) {
     switch (type) {
         case UPDATE: {

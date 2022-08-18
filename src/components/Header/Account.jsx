@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronDownIcon, BellIcon, UpDownIcon } from '@chakra-ui/icons';
 import {
     Icon,
@@ -13,46 +13,62 @@ import {
 } from '@chakra-ui/react';
 
 import {
-    useAccount,
-    useConnect,
-    useBalance,
-    useDisconnect
-} from 'wagmi';
+    CheckIfConnectMetaMask,
+    GetBalance,
+    BalanceToString,
+    Disconnect,
+    ConnectMetaMask
+} from '../../globals/EthersWrap';
 
 function clippedAddress(addr) {
     return addr && addr.slice(0, 6) + '...' + addr.slice(addr.length - 4, addr.length);
 }
 
-// wagmi useBalance和useChainId有bug
-// 连接和未连接的情况必须分开
-const AccountNotConnected = () => {
-    const { connect, connectors } = useConnect();
-    return (
-        <>
-            <Button colorScheme='blue' size='sm' onClick={() => connect({ connector: connectors[0] })}>Connect Wallet</Button>
-        </>
-    )
-};
-
-const AccountConnected = () => {
-    const { address, isConnected, connector } = useAccount();
-    console.log("address",address,"isConnected",isConnected,"connector:",connector);
-
-    const { data: balanceData } = useBalance({
-        addressOrName: address,
-    });
-    const { disconnect } = useDisconnect();
-    return (
-        <>
-            <Center bg="black" color="white" h="100%">{balanceData?.formatted} {balanceData?.symbol}</Center>
-            <Center bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
-            <Button colorScheme='yellow' size='sm' onClick={() => disconnect()}>Disconnect</Button>
-        </>
-    )
-};
-
 const Account = () => {
-    const { isConnected } = useAccount();
+    const [isConnected, setConnected] = useState(false);
+    const [address, setAddress] = useState('');
+    const [balance, setBalance] = useState('0');
+    const [chainId, setChainId] = useState(0);
+    const checkConnect = async () => {
+        try {
+            console.log('checkConnect');
+            const r = await CheckIfConnectMetaMask();
+            setConnected(true);
+            setAddress(r.address);
+            setChainId(r.chainId);
+            const b = await GetBalance(r.address);
+            setBalance(BalanceToString(b, 'ether'));
+        } catch (error) {
+            console.log(error);
+            setConnected(false);
+        }
+
+    }
+    useEffect(() => {
+        checkConnect();
+    }, [])
+
+    const connectWalletClicked = async (e) => {
+        e.preventDefault();
+        console.log('connectWalletClicked');
+        try {
+            const r = await ConnectMetaMask();
+            console.log('ConnectMetaMask return', r);
+            setConnected(true);
+            setAddress(r.address+'');
+            setChainId(r.chainId+0);
+            const b = await GetBalance(r.address);
+            setBalance(BalanceToString(b, 'ether'));
+        } catch (error) {
+            console.log('error', error);
+            setConnected(false);
+        }
+    };
+    const disconnectClicked = () => {
+        Disconnect();
+        setConnected(false);
+    };
+
     return (
         <Center justifyContent="space-between">
             {/* network choose(暂时先只支持hardhat) */}
@@ -74,9 +90,15 @@ const Account = () => {
             {/* Account Info */}
             {
                 isConnected ? (
-                    <AccountConnected />
+                    <>
+                        <Center bg="black" color="white" h="100%">{`${balance} ETH`}</Center>
+                        <Center bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
+                        <Button colorScheme='yellow' size='sm' onClick={disconnectClicked}>Disconnect</Button>
+                    </>
                 ) : (
-                    <AccountNotConnected />
+                    <>
+                        <Button colorScheme='blue' size='sm' onClick={connectWalletClicked}>Connect Wallet</Button>
+                    </>
                 )
             }
         </Center>
