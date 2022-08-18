@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDownIcon, BellIcon, UpDownIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
-    Icon,
-    Flex,
     Box,
     Center,
     Menu,
@@ -16,33 +14,31 @@ import {
     CheckIfConnectMetaMask,
     GetBalance,
     BalanceToString,
-    Disconnect,
     ConnectMetaMask
 } from '../../globals/EthersWrap';
+
+import {
+    useAccountContext
+} from "../../contexts/Account"
 
 function clippedAddress(addr) {
     return addr && addr.slice(0, 6) + '...' + addr.slice(addr.length - 4, addr.length);
 }
 
 const Account = () => {
-    const [isConnected, setConnected] = useState(false);
-    const [address, setAddress] = useState('');
+    const { address, isConnected, chainId, onConnected, onDisconnected } = useAccountContext();
     const [balance, setBalance] = useState('0');
-    const [chainId, setChainId] = useState(0);
+
     const checkConnect = async () => {
         try {
             console.log('checkConnect');
             const r = await CheckIfConnectMetaMask();
-            setConnected(true);
-            setAddress(r.address);
-            setChainId(r.chainId);
+            onConnected(r.address, r.chainId);
             const b = await GetBalance(r.address);
             setBalance(BalanceToString(b, 'ether'));
         } catch (error) {
             console.log(error);
-            setConnected(false);
         }
-
     }
     useEffect(() => {
         checkConnect();
@@ -54,19 +50,17 @@ const Account = () => {
         try {
             const r = await ConnectMetaMask();
             console.log('ConnectMetaMask return', r);
-            setConnected(true);
-            setAddress(r.address+'');
-            setChainId(r.chainId+0);
+            onConnected(r.address, r.chainId);
             const b = await GetBalance(r.address);
             setBalance(BalanceToString(b, 'ether'));
         } catch (error) {
             console.log('error', error);
-            setConnected(false);
         }
     };
-    const disconnectClicked = () => {
-        Disconnect();
-        setConnected(false);
+    const disconnectClicked = (e) => {
+        e.preventDefault();
+        console.log('disconnectClicked');
+        onDisconnected();
     };
 
     return (
@@ -105,57 +99,4 @@ const Account = () => {
     )
 };
 
-
 export default Account;
-
-
-// const Account = () => {
-//     const currencySymbol = 'ETH';
-//     const [userBalance, setUserBalance] = useState('0');
-
-//     const { address, connector, isConnected } = useAccount();
-//     // const { data: ensAvatar } = useEnsAvatar({ addressOrName: address });
-//     console.log("address", address);
-//     console.log("useAccount.connector", connector);
-//     console.log("isConnected", isConnected);
-//     // console.log("ensAvatar", ensAvatar);
-
-//     // pendingConnector表示处于连接中的Connector
-//     const { connect, connectors, error, isLoading, pendingConnector } = useConnect();
-//     console.log("connect", connect);
-//     console.log("isLoading", isLoading);
-//     console.log("connectors[0]",connectors[0]);
-//     console.log("connectors[0].ready",connectors[0]?.ready);
-
-//     const provider = useProvider();
-//     console.log('useProvider', provider);
-//     console.log('useProvider getSigner', provider.getSigner());
-
-//     const btn1 = () => connect({ connector: connectors[0] });
-//     const btn2 = async () => {
-//         // Connector的provider是一个代理类(Proxy)
-//         const provider2 = await connectors[0]?.getProvider();
-//         console.log('provider from Connector', provider2);
-//         console.log('chainId from Connector', await connectors[0]?.getChainId());
-//     };
-
-//     // console.log('pendingConnector.id == connectors[0].id', pendingConnector.id == connectors[0].id);
-
-//     return (
-//         <Center justifyContent="space-between">
-//             <Button onClick={btn1}>测试按钮1</Button>
-//             <Button onClick={btn2}>测试按钮2</Button>
-//             <Box>
-//                 {connectors.map(connector => (
-//                     <Box key={connector.id}>
-//                         {connector.name}
-//                         {connector.ready ? '(supported)':'(not supported)'}
-//                     </Box>
-//                 ))}
-//             </Box>
-//             <NetworkChoose />
-//             <AccountInfo balance={userBalance} />
-//             <LogoutButton />
-//         </Center>
-//     )
-// };

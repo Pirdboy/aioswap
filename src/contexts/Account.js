@@ -5,19 +5,18 @@ import React, {
 } from 'react'
 
 
-export const AccountContext = createContext();
-export function useAccountContext() {
+const AccountContext = createContext();
+function useAccountContext() {
     return useContext(AccountContext);
 }
 
 const initialState = {
     address: "",
-    chainId: 1,
+    chainId: 31337,
     isConnected: false,
 };
 
 const UPDATE = 'UPDATE';
-const RESET = 'RESET';
 
 // reducer里不应该有side effect
 function reducer(state, { type, payload }) {
@@ -31,13 +30,10 @@ function reducer(state, { type, payload }) {
     }
 }
 
-export default function Provider({ children }) {
+function Provider({ children }) {
     const [state, dispatch] = useReducer(reducer, initialState);
     const contextValue = {
-        account: state,
-        updateAccount: (address, chainId) => {
-            dispatch({ type: UPDATE, payload: { address, chainId } });
-        },
+        ...state,
         onConnected: (address, chainId) => {
             dispatch({ type: UPDATE, payload: { address, chainId, isConnected: true } })
         },
@@ -51,3 +47,8 @@ export default function Provider({ children }) {
         </AccountContext.Provider>
     )
 }
+
+export default Provider;
+export {
+    useAccountContext
+};

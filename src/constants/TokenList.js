@@ -2,7 +2,8 @@ const TokenList = [
     {
         "chainId": 1,
         "name": "Ether",
-        "symbol":"ETH",
+        "symbol": "ETH",
+        "decimals": 18
     },
     {
         "chainId": 1,
@@ -1417,10 +1418,12 @@ const RecommandedTokenList = [
 ];
 
 const DefaultTokenIn = {
+    "chainId": 1,
     "name": "Ether",
-    "symbol":"ETH",
+    "symbol": "ETH",
+    "decimals": 18
 };
-const DefaultTokenOut =     {
+const DefaultTokenOut = {
     "chainId": 1,
     "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     "name": "Dai Stablecoin",

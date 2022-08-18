@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Box, Flex, Center, Input, IconButton, Button, Divider, Icon } from '@chakra-ui/react';
 import { SettingsIcon, ChevronDownIcon, ArrowDownIcon } from '@chakra-ui/icons';
 import { IoRepeat, IoChevronForward } from 'react-icons/io5';
@@ -8,8 +8,11 @@ import NumberInput from "../NumberInput";
 import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
 
 import {
-
+    GetERC20Balance,
+    GetBalance,
+    BalanceToString
 } from "../../globals/EthersWrap";
+import { useAccountContext } from "../../contexts/Account";
 
 const TokenInput = ({
     value,
@@ -47,7 +50,8 @@ const SwapChoice = ({
 };
 
 const Swap = () => {
-    const [isConnected, setConnected] = useState(false);
+    const { address, chainId, isConnected } = useAccountContext();
+
     const [tokenInInfo, setTokenInInfo] = useState(DefaultTokenIn);
     const [tokenInBalance, setTokenInBalance] = useState('0');
     const [tokenInValue, setTokenInValue] = useState('');
@@ -61,20 +65,11 @@ const Swap = () => {
     const [priceImpact, setPriceImpact] = useState('0.36%');
     const [tradePath, setTradePath] = useState(['USDC', 'WETH', '1INCH']);
 
-    const tradePathDisplay = tradePath.map((e, i) => {
-        if (i > 0) {
-            return (
-                <Center key={i}>
-                    <Icon as={IoChevronForward} />
-                    {e}
-                </Center>
-            )
-        } else {
-            return (
-                <Center key={i}>{e}</Center>
-            )
-        }
-    });
+    const tradePathDisplay = tradePath.map((e, i) => (
+        i > 0
+            ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
+            : (<Center key={i}>{e}</Center>)
+    ));
     const onTokenInInput = (val) => {
         setTokenInValue(val);
     };
@@ -95,26 +90,40 @@ const Swap = () => {
         console.log('onTokenOutSelect', tokenObj);
         setTokenOutInfo(tokenObj);
     }
+    
+    useEffect(() => {
+        const fetchTokenInBalance = async () => {
+            if(!isConnected) {
+                setTokenInBalance('0');
+                return;
+            }
+            let balance;
+            if(tokenInInfo.symbol === 'ETH') {
+                balance = await GetBalance(address);
+            } else {
+                balance = await GetERC20Balance(address, tokenInInfo.address);
+            }
+            setTokenInBalance(BalanceToString(balance, tokenInInfo.decimals));
+        };
+        fetchTokenInBalance();
+    }, [tokenInInfo, address, isConnected]);
 
-    // 问题: 连接、账户地址等状态,在Account、Swap中都要用到
-    const fetchTokenInBalance = async () => {
-
-    };
-
-    const fetchTokenOutBalance = async () => {
-
-    };
-    // useEffect(() => {
-
-    // }, []);
-
-    // useEffect(() => {
-
-    // }, []);
-
-    // useEffect(() => {
-
-    // }, []);
+    useEffect(() => {
+        const fetchTokenOutBalance = async () => {
+            if(!isConnected) {
+                setTokenOutBalance('0');
+                return;
+            }
+            let balance;
+            if(tokenOutInfo.symbol === 'ETH') {
+                balance = await GetBalance(address);
+            } else {
+                balance = await GetERC20Balance(address, tokenOutInfo.address);
+            }
+            setTokenOutBalance(BalanceToString(balance, tokenOutInfo.decimals))
+        };
+        fetchTokenOutBalance();
+    }, [tokenOutInfo, address, isConnected]);
 
     return (
         <Center bg="gray.600" w="100%" pt="60px">
@@ -135,7 +144,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>From</Center>
-                        <Center>{`Balance ${tokenInBalance}`}</Center>
+                        <Center>{`Balance ${isConnected ? tokenInBalance : '0'}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenInInfo.symbol}
@@ -157,7 +166,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>To</Center>
-                        <Center>{`Balance ${tokenOutBalance}`}</Center>
+                        <Center>{`Balance ${isConnected ? tokenOutBalance : '0'}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenOutInfo.symbol}
@@ -194,7 +203,7 @@ const Swap = () => {
                     <Button colorScheme='blue'>Approve</Button>
                     <Box w="10px"></Box>
                     <Button colorScheme='blue'>Swap</Button>
-                    
+
                 </Center>
                 {/* trade estimate display */}
                 <Box>
