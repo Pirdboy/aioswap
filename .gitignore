@@ -24,3 +24,5 @@ yarn-error.log*
 
 note.txt
 .vscode
+code-examples
+test-tools

@@ -1432,5 +1432,14 @@ const DefaultTokenOut = {
     "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png"
 }
 
+const WETH = {
+    "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    "chainId": 1,
+    "name": "WrappedEther",
+    "symbol": "WETH",
+    "decimals": 18,
+    "logoURI": "https://tokens.1inch.io/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
+};
+
 export default TokenList;
-export { RecommandedTokenList, DefaultTokenIn, DefaultTokenOut };
+export { RecommandedTokenList, DefaultTokenIn, DefaultTokenOut, WETH };

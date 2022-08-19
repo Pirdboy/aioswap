@@ -12,6 +12,9 @@ import {
     GetBalance,
     BalanceToString
 } from "../../globals/EthersWrap";
+import {
+    GetBestTradeExactIn
+} from "../../globals/UniswapV2Wrap";
 import { useAccountContext } from "../../contexts/Account";
 
 const TokenInput = ({
@@ -58,23 +61,44 @@ const Swap = () => {
     const [tokenOutInfo, setTokenOutInfo] = useState(DefaultTokenOut);
     const [tokenOutBalance, setTokenOutBalance] = useState('0');
     const [tokenOutValue, setTokenOutValue] = useState('');
-    const [price, setPrice] = useState('1.147');
-    const [priceInvert, setPriceInvert] = useState('0.003222');
+    const [price, setPrice] = useState('');
+    const [priceInvert, setPriceInvert] = useState('');
     const [priceShowInvert, setPriceShowInvert] = useState(false);
-    const [minimumReceived, setMinimumReceived] = useState('2.303');
-    const [priceImpact, setPriceImpact] = useState('0.36%');
-    const [tradePath, setTradePath] = useState(['USDC', 'WETH', '1INCH']);
+    const [minimumReceived, setMinimumReceived] = useState('');
+    const [priceImpact, setPriceImpact] = useState('');
+    const [tradePath, setTradePath] = useState([]);
 
     const tradePathDisplay = tradePath.map((e, i) => (
         i > 0
             ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
             : (<Center key={i}>{e}</Center>)
     ));
-    const onTokenInInput = (val) => {
-        setTokenInValue(val);
+    const clearBothInput = () => {
+        setTokenInValue('');
+        setTokenOutValue('');
     };
-    const onTokenOutInput = (val) => {
+    const setTrade = ({price, priceInvert, amountOut, minimumAmountOut, priceImpact, path}) => {
+        price && setPrice(price);
+        priceInvert && setPriceInvert(priceInvert);
+        amountOut && setTokenOutValue(amountOut);
+        minimumAmountOut && setMinimumReceived(minimumAmountOut);
+        priceImpact && setPriceImpact(priceImpact);
+        path && setTradePath(path);
+    };
+
+    const onTokenInInput = async (val) => {
+        setTokenInValue(val);
+        if(!val || parseFloat(val) === 0) {
+            return;
+        }
+        const trade = await GetBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
+        setTrade(trade);
+    };
+    const onTokenOutInput = async (val) => {
         setTokenOutValue(val);
+        if(!val || parseFloat(val) === 0) {
+            return;
+        }
     };
     const onTokenInSelect = (tokenObj) => {
         if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenInInfo.symbol) {
@@ -82,6 +106,7 @@ const Swap = () => {
         }
         console.log('onTokenInSelect', tokenObj);
         setTokenInInfo(tokenObj);
+        clearBothInput();
     }
     const onTokenOutSelect = (tokenObj) => {
         if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenOutInfo.symbol) {
@@ -89,6 +114,7 @@ const Swap = () => {
         }
         console.log('onTokenOutSelect', tokenObj);
         setTokenOutInfo(tokenObj);
+        clearBothInput();
     }
     
     useEffect(() => {
@@ -213,7 +239,7 @@ const Swap = () => {
                     </Flex>
                     <Flex justify="space-between">
                         <Center>Price Impact</Center>
-                        <Center>{`${priceImpact}`}</Center>
+                        <Center>{`${priceImpact}%`}</Center>
                     </Flex>
                     <Flex justify="space-between">
                         <Center>{`Network Fee (reserved)`}</Center>
