@@ -76,7 +76,7 @@ const Swap = () => {
         setTokenInValue('');
         setTokenOutValue('');
     };
-    const setTrade = ({price, priceInvert, amountOut, minimumAmountOut, path}) => {
+    const setTrade = ({ price, priceInvert, amountOut, minimumAmountOut, path }) => {
         price && setPrice(price);
         priceInvert && setPriceInvert(priceInvert);
         amountOut && setTokenOutValue(amountOut);
@@ -86,7 +86,7 @@ const Swap = () => {
 
     const onTokenInInput = async (val) => {
         setTokenInValue(val);
-        if(!val || parseFloat(val) === 0) {
+        if (!val || parseFloat(val) === 0) {
             return;
         }
         const trade = await GetBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
@@ -94,7 +94,7 @@ const Swap = () => {
     };
     const onTokenOutInput = async (val) => {
         setTokenOutValue(val);
-        if(!val || parseFloat(val) === 0) {
+        if (!val || parseFloat(val) === 0) {
             return;
         }
     };
@@ -114,15 +114,15 @@ const Swap = () => {
         setTokenOutInfo(tokenObj);
         clearBothInput();
     }
-    
+
     useEffect(() => {
         const fetchTokenInBalance = async () => {
-            if(!isConnected) {
+            if (!isConnected) {
                 setTokenInBalance('0');
                 return;
             }
             let balance;
-            if(tokenInInfo.symbol === 'ETH') {
+            if (tokenInInfo.symbol === 'ETH') {
                 balance = await GetBalance(address);
             } else {
                 balance = await GetERC20Balance(address, tokenInInfo.address);
@@ -134,12 +134,12 @@ const Swap = () => {
 
     useEffect(() => {
         const fetchTokenOutBalance = async () => {
-            if(!isConnected) {
+            if (!isConnected) {
                 setTokenOutBalance('0');
                 return;
             }
             let balance;
-            if(tokenOutInfo.symbol === 'ETH') {
+            if (tokenOutInfo.symbol === 'ETH') {
                 balance = await GetBalance(address);
             } else {
                 balance = await GetERC20Balance(address, tokenOutInfo.address);
@@ -148,6 +148,15 @@ const Swap = () => {
         };
         fetchTokenOutBalance();
     }, [tokenOutInfo, address, isConnected]);
+
+    const tokenInBalanceNumber = parseFloat(tokenInBalance);
+    const tokenInValueNumber = parseFloat(tokenInValue || '0.0');
+    let buttonDisplay = 0;
+    if (tokenInValueNumber === 0) {
+        buttonDisplay = 1;
+    } else if (tokenInValueNumber > tokenInBalanceNumber) {
+        buttonDisplay = 2;
+    }
 
     return (
         <Center bg="gray.600" w="100%" pt="60px">
@@ -224,12 +233,40 @@ const Swap = () => {
                     </Center>
                 </Flex>
                 {/* approve, swap, insufficient button */}
-                <Center>
-                    <Button colorScheme='blue'>Approve</Button>
-                    <Box w="10px"></Box>
-                    <Button colorScheme='blue'>Swap</Button>
-
-                </Center>
+                {
+                    buttonDisplay === 0 ?
+                        <>
+                            <Center>
+                                <Button colorScheme='blue'>Approve</Button>
+                                <Box w="10px"></Box>
+                                <Button colorScheme='blue'>Swap</Button>
+                            </Center>
+                        </>
+                        :
+                        buttonDisplay === 1 ?
+                            <>
+                                <Flex>
+                                    <Button
+                                        isDisabled={true}
+                                        width="100%"
+                                        color="white"
+                                        colorScheme='whiteAlpha'>
+                                        Enter Amount
+                                    </Button>
+                                </Flex>
+                            </> :
+                            <>
+                                <Flex>
+                                    <Button
+                                        isDisabled={true}
+                                        width="100%"
+                                        color="white"
+                                        colorScheme='whiteAlpha'>
+                                        Insufficient {tokenInInfo.symbol} balance
+                                    </Button>
+                                </Flex>
+                            </>
+                }
                 {/* trade estimate display */}
                 <Box>
                     <Flex justify="space-between">

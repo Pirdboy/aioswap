@@ -75,7 +75,7 @@ const GetERC20Balance = async (accountAddress, tokenAddress) => {
 const BalanceToString = (balance, unitsOrDecimals, significant=6) => {
     let s = ethers.utils.formatUnits(balance, unitsOrDecimals);
     let d = new Decimal(s);
-    return d.toSignificantDigits(significant, 1);
+    return d.toSignificantDigits(significant, 1); // 第二个参数是ROUND_DOWN
 }
 
 export {
