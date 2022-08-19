@@ -87,6 +87,7 @@ const Swap = () => {
     const onTokenInInput = async (val) => {
         setTokenInValue(val);
         if (!val || parseFloat(val) === 0) {
+            clearBothInput();
             return;
         }
         const trade = await GetBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
