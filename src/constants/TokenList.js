@@ -1441,5 +1441,4 @@ const WETH = {
     "logoURI": "https://tokens.1inch.io/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
 };
 
-export default TokenList;
-export { RecommandedTokenList, DefaultTokenIn, DefaultTokenOut, WETH };
+export { TokenList, RecommandedTokenList, DefaultTokenIn, DefaultTokenOut, WETH };

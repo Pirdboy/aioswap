@@ -65,7 +65,6 @@ const Swap = () => {
     const [priceInvert, setPriceInvert] = useState('');
     const [priceShowInvert, setPriceShowInvert] = useState(false);
     const [minimumReceived, setMinimumReceived] = useState('');
-    const [priceImpact, setPriceImpact] = useState('');
     const [tradePath, setTradePath] = useState([]);
 
     const tradePathDisplay = tradePath.map((e, i) => (
@@ -77,12 +76,11 @@ const Swap = () => {
         setTokenInValue('');
         setTokenOutValue('');
     };
-    const setTrade = ({price, priceInvert, amountOut, minimumAmountOut, priceImpact, path}) => {
+    const setTrade = ({price, priceInvert, amountOut, minimumAmountOut, path}) => {
         price && setPrice(price);
         priceInvert && setPriceInvert(priceInvert);
         amountOut && setTokenOutValue(amountOut);
         minimumAmountOut && setMinimumReceived(minimumAmountOut);
-        priceImpact && setPriceImpact(priceImpact);
         path && setTradePath(path);
     };
 
@@ -236,10 +234,6 @@ const Swap = () => {
                     <Flex justify="space-between">
                         <Center>Minimum received</Center>
                         <Center>{`${minimumReceived} ${tokenOutInfo.symbol}`}</Center>
-                    </Flex>
-                    <Flex justify="space-between">
-                        <Center>Price Impact</Center>
-                        <Center>{`${priceImpact}%`}</Center>
                     </Flex>
                     <Flex justify="space-between">
                         <Center>{`Network Fee (reserved)`}</Center>

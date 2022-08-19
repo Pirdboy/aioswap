@@ -15,7 +15,7 @@ import {
     ModalCloseButton
 } from '@chakra-ui/react';
 
-import TokenList, { RecommandedTokenList } from "../../constants/TokenList";
+import {TokenList, RecommandedTokenList } from "../../constants/TokenList";
 
 const ModalWarning = ({ isOpen, title, onClose, children }) => {
     return (

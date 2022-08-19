@@ -8,7 +8,7 @@ import {
     TradeType,
     Percent
 } from '@uniswap/sdk';
-import tokenList, { WETH } from '../constants/TokenList';
+import {TokenList, WETH } from '../constants/TokenList';
 
 const ethers = require('ethers');
 const ethersProvider = require('./EthersWrap').GetEthersProvider();
@@ -36,7 +36,7 @@ const GetBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippage = "
     let tokenOutObject = new Token(tokenOut.chainId, tokenOut.address, tokenOut.decimals, tokenOut.symbol, tokenOut.name);
 
     let pairs = (arr) => arr.map((v, i) => arr.slice(i + 1).map(w => [v, w])).flat();
-    let baseTokens = tokenList.filter(function (t) {
+    let baseTokens = TokenList.filter(function (t) {
         return ['DAI', 'USDC', 'USDT', 'COMP', 'WETH', 'MKR', 'LINK', tokenIn.symbol, tokenOut.symbol].includes(t.symbol)
     }).map((el) => {
         return new Token(el.chainId, el.address, el.decimals, el.symbol, el.name)
@@ -61,7 +61,6 @@ const GetBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippage = "
     let trade = bestTrades[0];
     const price = trade.executionPrice.toSignificant(6);
     const priceInvert = trade.executionPrice.invert().toSignificant(6);
-    const priceImpact = trade.priceImpact.toFixed(2);
     const amountOut = trade.outputAmount.toSignificant(6);
     const slippageTolerance = new Percent(Math.round(parseFloat(slippage) * 100), '10000') // 50 bips, 1 bip(基点) = 0.01%
     const minimumAmountOut = trade.minimumAmountOut(slippageTolerance).toSignificant(6);
@@ -75,7 +74,6 @@ const GetBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippage = "
     return {
         price,
         priceInvert,
-        priceImpact,
         amountOut,
         minimumAmountOut,
         path
