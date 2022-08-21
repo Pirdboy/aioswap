@@ -33,7 +33,6 @@ const Account = () => {
     useEffect(() => {
         const checkConnect = async () => {
             try {
-                console.log('checkConnect');
                 const r = await checkIfConnectMetaMask();
                 onConnected(r.address, r.chainId);
             } catch (error) {
@@ -60,7 +59,6 @@ const Account = () => {
         console.log('connectWalletClicked');
         try {
             const r = await connectMetaMask();
-            console.log('connectMetaMask return', r);
             onConnected(r.address, r.chainId);
         } catch (error) {
             console.log('error', error);
@@ -68,7 +66,6 @@ const Account = () => {
     };
     const disconnectClicked = (e) => {
         e.preventDefault();
-        console.log('disconnectClicked');
         onDisconnected();
     };
 

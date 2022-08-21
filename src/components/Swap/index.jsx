@@ -6,7 +6,7 @@ import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 import { ModalTokenSelect } from "../Modal";
 import NumberInput from "../NumberInput";
 import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
-import { getERC20Balance, getBalance } from "../../utils/EthersWrap";
+import { getERC20Balance, getBalance, getERC20AllowanceOfRouter, approveRouter } from "../../utils/EthersWrap";
 import TokenBalance, { TokenBalanceZero } from "../../utils/TokenBalance";
 import { getBestTradeExactIn } from "../../utils/UniswapV2Wrap";
 import { useAccountContext } from "../../contexts/Account";
@@ -51,6 +51,7 @@ const Swap = () => {
 
     const [tokenInInfo, setTokenInInfo] = useState(DefaultTokenIn);
     const [tokenInBalance, setTokenInBalance] = useState(TokenBalanceZero);
+    const [tokenInAllowance, setTokenInAllowance] = useState(TokenBalanceZero);
     const [tokenInValue, setTokenInValue] = useState('');
     const [tokenOutInfo, setTokenOutInfo] = useState(DefaultTokenOut);
     const [tokenOutBalance, setTokenOutBalance] = useState(TokenBalanceZero);
@@ -60,6 +61,7 @@ const Swap = () => {
     const [priceShowInvert, setPriceShowInvert] = useState(false);
     const [minimumReceived, setMinimumReceived] = useState('');
     const [tradePath, setTradePath] = useState([]);
+    const [forceUpdateAllowance, setForceUpdateAllowance] = useState(false);
 
     const tradePathDisplay = tradePath.map((e, i) => (
         i > 0
@@ -110,6 +112,19 @@ const Swap = () => {
         clearBothInput();
     }
 
+    const onApproveClicked = async (e) => {
+        e.preventDefault();
+        console.log('onApproveClicked');
+        await approveRouter(tokenInInfo, tokenInValue);
+        setForceUpdateAllowance(true);
+    };
+
+    const onSwapClicked = async (e) => {
+        e.preventDefault();
+        console.log('onSwapClicked');
+    }
+
+    // fetchTokenInBalance
     useEffect(() => {
         const fetchTokenInBalance = async () => {
             if (!isConnected) {
@@ -127,6 +142,7 @@ const Swap = () => {
         fetchTokenInBalance();
     }, [tokenInInfo, address, isConnected]);
 
+    // fetchTokenOutBalance
     useEffect(() => {
         const fetchTokenOutBalance = async () => {
             if (!isConnected) {
@@ -144,12 +160,95 @@ const Swap = () => {
         fetchTokenOutBalance();
     }, [tokenOutInfo, address, isConnected]);
 
+    // fetchTokenInAlowance
+    useEffect(() => {
+        const fetchTokenInAlowance = async () => {
+            if (!isConnected) {
+                return;
+            }
+            if (tokenInInfo.symbol === 'ETH') {
+                return;
+            }
+            const allowance = await getERC20AllowanceOfRouter(address, tokenInInfo);
+            console.log('fetchTokenInAlowance allowance', allowance.toString());
+            setTokenInAllowance(allowance);
+        };
+        fetchTokenInAlowance();
+    }, [tokenInInfo, isConnected, address])
+
+    // forceUpdateTokenInAllowance
+    useEffect(() => {
+        const fetchTokenInAllowance = async () => {
+            if (!forceUpdateAllowance) {
+                return;
+            }
+            if (!isConnected) {
+                return;
+            }
+            if (tokenInInfo.symbol === 'ETH') {
+                return;
+            }
+            const allowance = await getERC20AllowanceOfRouter(address, tokenInInfo);
+            console.log('fetchTokenInAlowance(forced) allowance', allowance.toString());
+            setTokenInAllowance(allowance);
+            setForceUpdateAllowance(false);
+        };
+        fetchTokenInAllowance();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [forceUpdateAllowance])
+
     const tokenInValueBalance = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenInInfo.decimals);
     let buttonDisplay = 0;
-    if(tokenInValueBalance.eq(TokenBalanceZero)) {
-        buttonDisplay = 1;
-    } else if(tokenInValueBalance.gt(tokenInBalance)) {
-        buttonDisplay = 2;
+    if (tokenInValueBalance.eq(TokenBalanceZero)) {
+        buttonDisplay = 1;   // input zero: Enter Amount
+    } else if (tokenInValueBalance.gt(tokenInBalance)) {
+        buttonDisplay = 2;   // Insufficient Balance
+    } else if (tokenInInfo.symbol === 'ETH') {
+        buttonDisplay = 3;  // swap button
+    } else {
+        if(tokenInValueBalance.gt(tokenInAllowance)) {
+            buttonDisplay = 4; // approve and disabled swap
+        } else {
+            buttonDisplay = 3; // swap button
+        }
+    }
+    console.log('buttonDisplay', buttonDisplay);
+
+    let buttons;
+    if (buttonDisplay === 1) {
+        buttons = (
+            <>
+                <Flex>
+                    <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'>Enter Amount</Button>
+                </Flex>
+            </>
+        );
+    } else if (buttonDisplay === 2) {
+        buttons = (
+            <>
+                <Flex>
+                    <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'> Insufficient {tokenInInfo.symbol} balance</Button>
+                </Flex>
+            </>
+        );
+    } else if (buttonDisplay === 3) {
+        buttons = (
+            <>
+                <Center>
+                    <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>
+                </Center>
+            </>
+        );
+    } else if (buttonDisplay === 4) {
+        buttons = (
+            <>
+                <Center>
+                    <Button onClick={onApproveClicked} colorScheme='blue'>{`Approve ${tokenInInfo.symbol} Token`}</Button>
+                    <Box w="10px"></Box>
+                    <Button isDisabled={true} colorScheme='whiteAlpha'>Swap</Button>
+                </Center>
+            </>
+        );
     }
 
     return (
@@ -227,40 +326,7 @@ const Swap = () => {
                     </Center>
                 </Flex>
                 {/* approve, swap, insufficient button */}
-                {
-                    buttonDisplay === 0 ?
-                        <>
-                            <Center>
-                                <Button colorScheme='blue'>Approve</Button>
-                                <Box w="10px"></Box>
-                                <Button colorScheme='blue'>Swap</Button>
-                            </Center>
-                        </>
-                        :
-                        buttonDisplay === 1 ?
-                            <>
-                                <Flex>
-                                    <Button
-                                        isDisabled={true}
-                                        width="100%"
-                                        color="white"
-                                        colorScheme='whiteAlpha'>
-                                        Enter Amount
-                                    </Button>
-                                </Flex>
-                            </> :
-                            <>
-                                <Flex>
-                                    <Button
-                                        isDisabled={true}
-                                        width="100%"
-                                        color="white"
-                                        colorScheme='whiteAlpha'>
-                                        Insufficient {tokenInInfo.symbol} balance
-                                    </Button>
-                                </Flex>
-                            </>
-                }
+                {buttons}
                 {/* trade estimate display */}
                 <Box>
                     <Flex justify="space-between">

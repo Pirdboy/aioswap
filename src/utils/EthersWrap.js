@@ -87,7 +87,7 @@ const getERC20Balance = async (accountAddress, tokenInfo) => {
 };
 
 /**
- * 获取代币对Router合约的批准额度
+ * 获取erc20代币Router合约的批准额度
  * @param {string} ownerAddress 代币拥有者地址
  * @param {object} tokenInfo 代币信息
  * @returns {Promise<TokenBalance>} 批准额度
@@ -123,7 +123,8 @@ const approveRouter = async (tokenInfo, displayAmount) => {
         UNISWAP_ROUTER02_ADDRESS,
         ethers.utils.parseUnits(displayAmount, tokenInfo.decimals),
     )
-    await txResponse.wait();
+    let receipt = await txResponse.wait();
+    console.log(`approveRouter Transaction was mined in block ${receipt.blockNumber}`);
 };
 
 export {
