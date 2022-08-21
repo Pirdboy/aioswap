@@ -6,15 +6,9 @@ import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 import { ModalTokenSelect } from "../Modal";
 import NumberInput from "../NumberInput";
 import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
-
-import {
-    GetERC20Balance,
-    GetBalance,
-    BalanceToString
-} from "../../globals/EthersWrap";
-import {
-    GetBestTradeExactIn
-} from "../../globals/UniswapV2Wrap";
+import { getERC20Balance, getBalance } from "../../utils/EthersWrap";
+import TokenBalance, { TokenBalanceZero } from "../../utils/TokenBalance";
+import { getBestTradeExactIn } from "../../utils/UniswapV2Wrap";
 import { useAccountContext } from "../../contexts/Account";
 
 const TokenInput = ({
@@ -56,10 +50,10 @@ const Swap = () => {
     const { address, chainId, isConnected } = useAccountContext();
 
     const [tokenInInfo, setTokenInInfo] = useState(DefaultTokenIn);
-    const [tokenInBalance, setTokenInBalance] = useState('0');
+    const [tokenInBalance, setTokenInBalance] = useState(TokenBalanceZero);
     const [tokenInValue, setTokenInValue] = useState('');
     const [tokenOutInfo, setTokenOutInfo] = useState(DefaultTokenOut);
-    const [tokenOutBalance, setTokenOutBalance] = useState('0');
+    const [tokenOutBalance, setTokenOutBalance] = useState(TokenBalanceZero);
     const [tokenOutValue, setTokenOutValue] = useState('');
     const [price, setPrice] = useState('');
     const [priceInvert, setPriceInvert] = useState('');
@@ -90,7 +84,7 @@ const Swap = () => {
             clearBothInput();
             return;
         }
-        const trade = await GetBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
+        const trade = await getBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
         setTrade(trade);
     };
     const onTokenOutInput = async (val) => {
@@ -119,16 +113,16 @@ const Swap = () => {
     useEffect(() => {
         const fetchTokenInBalance = async () => {
             if (!isConnected) {
-                setTokenInBalance('0');
+                setTokenInBalance(TokenBalanceZero);
                 return;
             }
             let balance;
             if (tokenInInfo.symbol === 'ETH') {
-                balance = await GetBalance(address);
+                balance = await getBalance(address);
             } else {
-                balance = await GetERC20Balance(address, tokenInInfo.address);
+                balance = await getERC20Balance(address, tokenInInfo);
             }
-            setTokenInBalance(BalanceToString(balance, tokenInInfo.decimals));
+            setTokenInBalance(balance);
         };
         fetchTokenInBalance();
     }, [tokenInInfo, address, isConnected]);
@@ -136,26 +130,25 @@ const Swap = () => {
     useEffect(() => {
         const fetchTokenOutBalance = async () => {
             if (!isConnected) {
-                setTokenOutBalance('0');
+                setTokenOutBalance(TokenBalanceZero);
                 return;
             }
             let balance;
             if (tokenOutInfo.symbol === 'ETH') {
-                balance = await GetBalance(address);
+                balance = await getBalance(address);
             } else {
-                balance = await GetERC20Balance(address, tokenOutInfo.address);
+                balance = await getERC20Balance(address, tokenOutInfo);
             }
-            setTokenOutBalance(BalanceToString(balance, tokenOutInfo.decimals))
+            setTokenOutBalance(balance);
         };
         fetchTokenOutBalance();
     }, [tokenOutInfo, address, isConnected]);
 
-    const tokenInBalanceNumber = parseFloat(tokenInBalance);
-    const tokenInValueNumber = parseFloat(tokenInValue || '0.0');
+    const tokenInValueBalance = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenInInfo.decimals);
     let buttonDisplay = 0;
-    if (tokenInValueNumber === 0) {
+    if(tokenInValueBalance.eq(TokenBalanceZero)) {
         buttonDisplay = 1;
-    } else if (tokenInValueNumber > tokenInBalanceNumber) {
+    } else if(tokenInValueBalance.gt(tokenInBalance)) {
         buttonDisplay = 2;
     }
 
@@ -178,7 +171,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>From</Center>
-                        <Center>{`Balance ${isConnected ? tokenInBalance : '0'}`}</Center>
+                        <Center>{`Balance ${tokenInBalance.toString()}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenInInfo.symbol}
@@ -200,7 +193,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>To</Center>
-                        <Center>{`Balance ${isConnected ? tokenOutBalance : '0'}`}</Center>
+                        <Center>{`Balance ${tokenOutBalance.toString()}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenOutInfo.symbol}
@@ -212,7 +205,7 @@ const Swap = () => {
                 <Box h="10px"></Box>
                 {/* Route choose */}
                 <Box>
-                    <Flex>Route choose</Flex>
+                    <Flex>{`Route choose(not implemented)`}</Flex>
                     <SwapChoice title="Uniswap V2" minimumReceived="0.241368" selected={true} />
                     <SwapChoice title="1inch" minimumReceived="0.240792" />
                 </Box>

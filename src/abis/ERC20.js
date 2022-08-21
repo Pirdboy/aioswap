@@ -10,6 +10,4 @@ const ERC20ABI = [
     'function transferFrom(address from, address to, uint256 amount) external returns (bool)'
 ];
 
-module.exports = {
-    ERC20ABI
-}
+export default ERC20ABI;

@@ -11,7 +11,7 @@ import {
 import {TokenList, WETH } from '../constants/TokenList';
 
 const ethers = require('ethers');
-const ethersProvider = require('./EthersWrap').GetEthersProvider();
+const ethersProvider = require('./EthersWrap').getEthersProvider();
 
 /**
  * @dev 获取精确输入token的最优交易路径
@@ -21,7 +21,7 @@ const ethersProvider = require('./EthersWrap').GetEthersProvider();
  * @param slippage 滑点,比如0.5%就传0.5
  * @return Trade
  */
-const GetBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippage = "0.5") => {
+const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippage = "0.5") => {
     if (!tokenIn || !tokenInValue || !tokenOut) {
         return;
     }
@@ -81,5 +81,5 @@ const GetBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippage = "
 };
 
 export {
-    GetBestTradeExactIn
+    getBestTradeExactIn
 }

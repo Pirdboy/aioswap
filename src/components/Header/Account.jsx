@@ -11,11 +11,12 @@ import {
 } from '@chakra-ui/react';
 
 import {
-    CheckIfConnectMetaMask,
-    GetBalance,
-    BalanceToString,
-    ConnectMetaMask
-} from '../../globals/EthersWrap';
+    checkIfConnectMetaMask,
+    getBalance,
+    connectMetaMask
+} from '../../utils/EthersWrap';
+
+import {TokenBalanceZero} from "../../utils/TokenBalance";
 
 import {
     useAccountContext
@@ -27,32 +28,40 @@ function clippedAddress(addr) {
 
 const Account = () => {
     const { address, isConnected, chainId, onConnected, onDisconnected } = useAccountContext();
-    const [balance, setBalance] = useState('0');
+    const [balance, setBalance] = useState(TokenBalanceZero);
 
-    const checkConnect = async () => {
-        try {
-            console.log('checkConnect');
-            const r = await CheckIfConnectMetaMask();
-            onConnected(r.address, r.chainId);
-            const b = await GetBalance(r.address);
-            setBalance(BalanceToString(b, 'ether'));
-        } catch (error) {
-            console.log(error);
-        }
-    }
     useEffect(() => {
+        const checkConnect = async () => {
+            try {
+                console.log('checkConnect');
+                const r = await checkIfConnectMetaMask();
+                onConnected(r.address, r.chainId);
+            } catch (error) {
+                console.log(error);
+            }
+        }
         checkConnect();
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        const fetchBalance = async () => {
+            if(!isConnected) {
+                setBalance(TokenBalanceZero);
+                return;
+            }
+            const b = await getBalance(address);
+            setBalance(b);
+        };
+        fetchBalance();
+    }, [address, isConnected]);
 
     const connectWalletClicked = async (e) => {
         e.preventDefault();
         console.log('connectWalletClicked');
         try {
-            const r = await ConnectMetaMask();
-            console.log('ConnectMetaMask return', r);
+            const r = await connectMetaMask();
+            console.log('connectMetaMask return', r);
             onConnected(r.address, r.chainId);
-            const b = await GetBalance(r.address);
-            setBalance(BalanceToString(b, 'ether'));
         } catch (error) {
             console.log('error', error);
         }
@@ -85,7 +94,7 @@ const Account = () => {
             {
                 isConnected ? (
                     <>
-                        <Center bg="black" color="white" h="100%">{`${balance} ETH`}</Center>
+                        <Center bg="black" color="white" h="100%">{`${balance.toString()} ETH`}</Center>
                         <Center bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
                         <Button colorScheme='yellow' size='sm' onClick={disconnectClicked}>Disconnect</Button>
                     </>

@@ -5,7 +5,7 @@ import Swap from "./components/Swap";
 import SwapTest from "./components/Swap/SwapTest";
 import { ModalWarning, ModalTokenSelect } from "./components/Modal";
 import { Box, ChakraProvider } from '@chakra-ui/react';
-import { IsMetaMaskInstall } from "./globals/EthersWrap";
+import { isMetaMaskInstall } from "./utils/EthersWrap";
 import AccountContextProvider from "./contexts/Account";
 
 const Background = ({ children }) => {
@@ -26,7 +26,7 @@ const App = () => {
     const [showTokenList, setShowTokenList] = useState(false);
 
     useEffect(() => {
-        if (!IsMetaMaskInstall()) {
+        if (!isMetaMaskInstall()) {
             setShowMetaMaskWarning(true);
         }
     }, []);
