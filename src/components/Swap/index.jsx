@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Box, Flex, Center, Input, IconButton, Button, Divider, Icon } from '@chakra-ui/react';
+import React, { useEffect, useState } from "react";
+import { Box, Flex, Center, IconButton, Button, Divider, Icon } from '@chakra-ui/react';
 import { SettingsIcon, ChevronDownIcon, ArrowDownIcon } from '@chakra-ui/icons';
 import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 
@@ -8,8 +8,9 @@ import NumberInput from "../NumberInput";
 import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
 import { getERC20Balance, getBalance, getERC20AllowanceOfRouter, approveRouter } from "../../utils/EthersWrap";
 import TokenBalance, { TokenBalanceZero } from "../../utils/TokenBalance";
-import { getBestTradeExactIn } from "../../utils/UniswapV2Wrap";
+import { getBestTradeExactIn, swapToken } from "../../utils/UniswapV2Wrap";
 import { useAccountContext } from "../../contexts/Account";
+
 
 const TokenInput = ({
     value,
@@ -56,44 +57,40 @@ const Swap = () => {
     const [tokenOutInfo, setTokenOutInfo] = useState(DefaultTokenOut);
     const [tokenOutBalance, setTokenOutBalance] = useState(TokenBalanceZero);
     const [tokenOutValue, setTokenOutValue] = useState('');
+    const [forceUpdateAllowance, setForceUpdateAllowance] = useState(false);
+    const [trade, setTrade] = useState();
     const [price, setPrice] = useState('');
     const [priceInvert, setPriceInvert] = useState('');
     const [priceShowInvert, setPriceShowInvert] = useState(false);
     const [minimumReceived, setMinimumReceived] = useState('');
     const [tradePath, setTradePath] = useState([]);
-    const [forceUpdateAllowance, setForceUpdateAllowance] = useState(false);
 
-    const tradePathDisplay = tradePath.map((e, i) => (
-        i > 0
-            ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
-            : (<Center key={i}>{e}</Center>)
-    ));
     const clearBothInput = () => {
         setTokenInValue('');
         setTokenOutValue('');
     };
-    const setTrade = ({ price, priceInvert, amountOut, minimumAmountOut, path }) => {
-        price && setPrice(price);
-        priceInvert && setPriceInvert(priceInvert);
-        amountOut && setTokenOutValue(amountOut);
-        minimumAmountOut && setMinimumReceived(minimumAmountOut);
-        path && setTradePath(path);
-    };
+    const setTradeInfo = (t) => {
+        t.trade && setTrade(t.trade);
+        t.price && setPrice(t.price);
+        t.priceInvert && setPriceInvert(t.priceInvert);
+        t.minimumReceived && setMinimumReceived(t.minimumReceived);
+        t.amountOut && setTokenOutValue(t.amountOut);
+        t.path && setTradePath(t.path);
+    }
 
     const onTokenInInput = async (val) => {
         setTokenInValue(val);
-        if (!val || parseFloat(val) === 0) {
+        if (!val) {
             clearBothInput();
             return;
         }
-        const trade = await getBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
-        setTrade(trade);
+        const t = await getBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
+        if (t) {
+            setTradeInfo(t);
+        }
     };
     const onTokenOutInput = async (val) => {
         setTokenOutValue(val);
-        if (!val || parseFloat(val) === 0) {
-            return;
-        }
     };
     const onTokenInSelect = (tokenObj) => {
         if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenInInfo.symbol) {
@@ -122,6 +119,7 @@ const Swap = () => {
     const onSwapClicked = async (e) => {
         e.preventDefault();
         console.log('onSwapClicked');
+        await swapToken(trade, tokenInInfo, tokenInValue, tokenOutInfo, "0.5");
     }
 
     // fetchTokenInBalance
@@ -197,22 +195,30 @@ const Swap = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [forceUpdateAllowance])
 
-    const tokenInValueBalance = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenInInfo.decimals);
     let buttonDisplay = 0;
-    if (tokenInValueBalance.eq(TokenBalanceZero)) {
-        buttonDisplay = 1;   // input zero: Enter Amount
-    } else if (tokenInValueBalance.gt(tokenInBalance)) {
-        buttonDisplay = 2;   // Insufficient Balance
-    } else if (tokenInInfo.symbol === 'ETH') {
-        buttonDisplay = 3;  // swap button
-    } else {
-        if(tokenInValueBalance.gt(tokenInAllowance)) {
-            buttonDisplay = 4; // approve and disabled swap
+    {
+        const tokenInValueBalance = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenInInfo.decimals);
+        if (tokenInValueBalance.eq(TokenBalanceZero)) {
+            buttonDisplay = 1;   // input zero: Enter Amount
+        } else if (tokenInValueBalance.gt(tokenInBalance)) {
+            buttonDisplay = 2;   // Insufficient Balance
+        } else if (tokenInInfo.symbol === 'ETH') {
+            buttonDisplay = 3;  // swap button
         } else {
-            buttonDisplay = 3; // swap button
+            if (tokenInValueBalance.gt(tokenInAllowance)) {
+                buttonDisplay = 4; // approve and disabled swap
+            } else {
+                buttonDisplay = 3; // swap button
+            }
         }
+        console.log('buttonDisplay', buttonDisplay);
     }
-    console.log('buttonDisplay', buttonDisplay);
+
+    const tradePathDisplay = tradePath.map((e, i) =>
+        i > 0
+            ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
+            : (<Center key={i}>{e}</Center>)
+    )
 
     let buttons;
     if (buttonDisplay === 1) {
@@ -303,11 +309,11 @@ const Swap = () => {
                 </Box>
                 <Box h="10px"></Box>
                 {/* Route choose */}
-                <Box>
+                {/* <Box>
                     <Flex>{`Route choose(not implemented)`}</Flex>
                     <SwapChoice title="Uniswap V2" minimumReceived="0.241368" selected={true} />
                     <SwapChoice title="1inch" minimumReceived="0.240792" />
-                </Box>
+                </Box> */}
                 {/* price */}
                 <Flex justify="space-between">
                     <Center>Price</Center>

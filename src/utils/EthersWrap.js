@@ -3,13 +3,13 @@ import ERC20ABI from '../abis/ERC20';
 
 const ethers = require('ethers');
 const metaMaskProvider = new ethers.providers.Web3Provider(window.ethereum);
+const UNISWAP_ROUTER02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 
 const ChainIdList = {
     0: 'none',
     1: 'Mainnet',
     31337: 'hardhat',
 };
-const UNISWAP_ROUTER02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
 
 const getChainName = chainId => {
     return ChainIdList[chainId];
@@ -47,8 +47,6 @@ const connectMetaMask = async () => {
 };
 
 const getEthersProvider = () => metaMaskProvider;
-
-const getEthersSigner = () => metaMaskProvider.getSigner();
 
 const getChainId = async () => {
     return (await metaMaskProvider.getNetwork()).chainId;
@@ -127,6 +125,7 @@ const approveRouter = async (tokenInfo, displayAmount) => {
     console.log(`approveRouter Transaction was mined in block ${receipt.blockNumber}`);
 };
 
+
 export {
     checkIfConnectMetaMask,
     connectMetaMask,
@@ -135,7 +134,6 @@ export {
     getERC20Balance,
     getERC20AllowanceOfRouter,
     getEthersProvider,
-    getEthersSigner,
     getChainId,
     getChainName,
     isMetaMaskInstall,

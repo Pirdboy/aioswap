@@ -88,7 +88,7 @@ const SwapTest = () => {
         <div>
             <p>------------ Swap测试 --------------</p>
             <button type="submit" onClick={test_SwapEthForOthers}>test_SwapEthForOthers</button>
-            {/* <button type="submit" onClick={test_SwapSomeETHForAAVE}>test_SwapSomeETHForAAVE</button>
+            <button type="submit" onClick={test_SwapSomeETHForAAVE}>test_SwapSomeETHForAAVE</button>
             &nbsp;
             <button type="submit" onClick={test_SwapSomeETHForLINK}>test_SwapSomeETHForLINK</button>
             &nbsp;
@@ -100,7 +100,7 @@ const SwapTest = () => {
             &nbsp;
             <button type="submit" onClick={test_SwapSomeDAIForUNI}>test_SwapSomeDAIForUNI</button>
             &nbsp;
-            <button type="submit" onClick={test_SwapSomeDAIForETH}>test_SwapSomeDAIForETH</button> */}
+            <button type="submit" onClick={test_SwapSomeDAIForETH}>test_SwapSomeDAIForETH</button>
             <p>------ Approve测试 -----</p>
             <button type="submit" onClick={test_ApproveTokenUNI}>test_ApproveTokenUNI</button>
             &nbsp;
