@@ -121,7 +121,7 @@ const swapToken = async (token0Symbol, token0Input, token1Symbol, provider, sign
             path,
             to,
             deadline,
-            { gasPrice: 20e9 }
+            //{ gasPrice: 20e9 }
         );
         console.log(`Transaction hash: ${tx.hash}`);
         const receipt = await tx.wait();
@@ -134,7 +134,7 @@ const swapToken = async (token0Symbol, token0Input, token1Symbol, provider, sign
             path,
             to,
             deadline,
-            { gasPrice: await provider.getGasPrice() }
+            //{ gasPrice: await provider.getGasPrice() }
         );
         console.log(`Transaction hash: ${tx.hash}`);
         const receipt = await tx.wait();
@@ -181,10 +181,10 @@ export const ApproveToken = async (tokenName, amount) => {
     let tx = await erc20Contract.approve(
         uniswapRouter02Address,
         ethers.BigNumber.from((parseFloat(amount) * decimals).toString()),
-        {
-            gasPrice: 20e9,
-            gasLimit: 3000000
-        }
+        // {
+        //     gasPrice: 20e9,
+        //     gasLimit: 3000000
+        // }
     );
     console.log(`Transaction hash: ${tx.hash}`);
     let receipt = await tx.wait();

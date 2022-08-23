@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import './App.css';
 import Header from "./components/Header";
+import TestPanel from "./components/TestPanel";
 import Swap from "./components/Swap";
-import SwapTest from "./components/Swap/SwapTest";
 import { ModalWarning, ModalTokenSelect } from "./components/Modal";
 import { Box, ChakraProvider } from '@chakra-ui/react';
 import { isMetaMaskInstall } from "./utils/EthersWrap";
@@ -21,6 +21,8 @@ const App = () => {
         document.title = "aioswap";
     }, []);
 
+    const showTestPanel = true;
+
     const [showMetaMaskWarning, setShowMetaMaskWarning] = useState(false);
     const [showNetworkWarning, setShowNetworkWarning] = useState(false);
     const [showTokenList, setShowTokenList] = useState(false);
@@ -35,6 +37,9 @@ const App = () => {
         <AccountContextProvider>
             <ChakraProvider>
                 <Background>
+                    {
+                        showTestPanel ? <><TestPanel /></> : <></>
+                    }
                     <ModalWarning
                         title="Metamask not detected"
                         isOpen={showMetaMaskWarning}
@@ -52,7 +57,6 @@ const App = () => {
                     <ModalTokenSelect isOpen={showTokenList} onClose={() => setShowTokenList(false)} />
                     <Header />
                     <Swap />
-                    <SwapTest />
                 </Background>
             </ChakraProvider>
         </AccountContextProvider>
