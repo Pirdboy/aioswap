@@ -17,7 +17,7 @@ const UNISWAP_ROUTER02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
  * @param tokenIn 输入token
  * @param tokenInValue 输入token金额
  * @param tokenOut 输出token
- * @param slippage 滑点,比如0.5%就传0.5
+ * @param slippageTolerance 滑点容忍度,比如0.5%就传0.5
  * @return Trade
  */
 const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTolerance = "0.5") => {

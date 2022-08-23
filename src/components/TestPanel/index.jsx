@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Button, Drawer } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import SwapTest from "./SwapTest";
 
 const TestPanel = () => {

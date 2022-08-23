@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Box, Flex, Center, IconButton, Button, Divider, Icon } from '@chakra-ui/react';
+import { Box, Flex, Center, IconButton, Button, Divider, Icon, Text, InputGroup, InputRightElement } from '@chakra-ui/react';
+import {
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+    PopoverHeader,
+    PopoverBody,
+    PopoverFooter,
+    PopoverArrow,
+    PopoverCloseButton,
+    PopoverAnchor,
+} from '@chakra-ui/react'
 import { SettingsIcon, ChevronDownIcon, ArrowDownIcon } from '@chakra-ui/icons';
 import { IoRepeat, IoChevronForward } from 'react-icons/io5';
 
@@ -13,15 +24,14 @@ import { useAccountContext } from "../../contexts/Account";
 
 
 const TokenInput = ({
-    value,
     tokenSymbol,
-    onInputValue,
     onSelectToken,
+    ...props
 }) => {
     const [showModal, setShowModal] = useState(false);
     return (
         <Flex>
-            <NumberInput onInputValue={onInputValue} value={value} />
+            <NumberInput {...props} />
             <Button colorScheme="blackAlpha" rightIcon={<ChevronDownIcon />} onClick={() => setShowModal(true)}>
                 {tokenSymbol ?? 'Select Token'}
             </Button>
@@ -47,6 +57,8 @@ const SwapChoice = ({
     )
 };
 
+let slippageToleranceValue = "0.5";
+
 const Swap = () => {
     const { address, chainId, isConnected } = useAccountContext();
 
@@ -59,6 +71,7 @@ const Swap = () => {
     const [tokenOutValue, setTokenOutValue] = useState('');
     const [forceUpdateAllowance, setForceUpdateAllowance] = useState(false);
     const [trade, setTrade] = useState();
+    const [slippageTolerance, setSlippageTolerance] = useState('');
     const [price, setPrice] = useState('');
     const [priceInvert, setPriceInvert] = useState('');
     const [priceShowInvert, setPriceShowInvert] = useState(false);
@@ -76,20 +89,26 @@ const Swap = () => {
         t.minimumReceived && setMinimumReceived(t.minimumReceived);
         t.amountOut && setTokenOutValue(t.amountOut);
         t.path && setTradePath(t.path);
-    }
-
-    const onTokenInInput = async (val) => {
+    };
+    const tokenInvert = e => {
+        e.preventDefault();
+        let tIn = tokenInInfo;
+        let tOut = tokenOutInfo;
+        setTokenInInfo(tOut);
+        setTokenOutInfo(tIn);
+    };
+    const onTokenInValueChange = async (val) => {
         setTokenInValue(val);
         if (!val) {
             clearBothInput();
             return;
         }
-        const t = await getBestTradeExactIn(tokenInInfo, val, tokenOutInfo, "0.5");
+        const t = await getBestTradeExactIn(tokenInInfo, val, tokenOutInfo, slippageToleranceValue);
         if (t) {
             setTradeInfo(t);
         }
     };
-    const onTokenOutInput = async (val) => {
+    const onTokenOutValueChange = async (val) => {
         setTokenOutValue(val);
     };
     const onTokenInSelect = (tokenObj) => {
@@ -99,7 +118,7 @@ const Swap = () => {
         console.log('onTokenInSelect', tokenObj);
         setTokenInInfo(tokenObj);
         clearBothInput();
-    }
+    };
     const onTokenOutSelect = (tokenObj) => {
         if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenOutInfo.symbol) {
             return;
@@ -107,8 +126,11 @@ const Swap = () => {
         console.log('onTokenOutSelect', tokenObj);
         setTokenOutInfo(tokenObj);
         clearBothInput();
-    }
-
+    };
+    const onSlippageToleranceValueChange = val => {
+        setSlippageTolerance(val);
+        slippageToleranceValue = val || "0.5";
+    };
     const onApproveClicked = async (e) => {
         e.preventDefault();
         console.log('onApproveClicked');
@@ -119,7 +141,7 @@ const Swap = () => {
     const onSwapClicked = async (e) => {
         e.preventDefault();
         console.log('onSwapClicked');
-        await swapToken(trade, tokenInInfo, tokenInValue, tokenOutInfo, "0.5");
+        await swapToken(trade, tokenInInfo, tokenInValue, tokenOutInfo, slippageToleranceValue);
     }
 
     // fetchTokenInBalance
@@ -211,14 +233,7 @@ const Swap = () => {
                 buttonDisplay = 3; // swap button
             }
         }
-        console.log('buttonDisplay', buttonDisplay);
     }
-
-    const tradePathDisplay = tradePath.map((e, i) =>
-        i > 0
-            ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
-            : (<Center key={i}>{e}</Center>)
-    )
 
     let buttons;
     if (buttonDisplay === 1) {
@@ -257,19 +272,45 @@ const Swap = () => {
         );
     }
 
+    const tradePathDisplay = tradePath.map((e, i) =>
+        i > 0
+            ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
+            : (<Center key={i}>{e}</Center>)
+    )
+
     return (
         <Center bg="gray.600" w="100%" pt="60px">
             <Box borderRadius="10px" padding="4px 10px" bg="black" color="white" minW="400px" minH="100px">
                 {/* title, setting button */}
                 <Flex justify="space-between">
                     <Center>Swap</Center>
+                    {/* settings button */}
                     <Center>
-                        <IconButton
-                            aria-label="swap settings"
-                            icon={<SettingsIcon />}
-                            size="sm"
-                            variant="unstyled"
-                        />
+                        <Popover placement="bottom-end">
+                            <PopoverTrigger>
+                                <IconButton
+                                aria-label="swap settings"
+                                icon={<SettingsIcon />}
+                                size="sm"
+                                variant="unstyled"
+                            />
+                            </PopoverTrigger>
+                            <PopoverContent bg="rgb(45, 55, 72)" width="300px">
+                                {/* <PopoverArrow /> */}
+                                {/* <PopoverCloseButton /> */}
+                                <PopoverHeader>Settings</PopoverHeader>
+                                <PopoverBody>
+                                    <Text>Slippage tolerance</Text>
+                                    <Box h="3px"></Box>
+                                    <Box>
+                                        <InputGroup size="sm">
+                                            <NumberInput value={slippageTolerance} onChange={onSlippageToleranceValueChange} placeholder="0.5" />
+                                            <InputRightElement children="%" />
+                                        </InputGroup>
+                                    </Box>
+                                </PopoverBody>
+                            </PopoverContent>
+                        </Popover>
                     </Center>
                 </Flex>
                 {/* tokenIn */}
@@ -281,7 +322,7 @@ const Swap = () => {
                     <TokenInput
                         tokenSymbol={tokenInInfo.symbol}
                         value={tokenInValue}
-                        onInputValue={onTokenInInput}
+                        onChange={onTokenInValueChange}
                         onSelectToken={onTokenInSelect}
                     />
                 </Box>
@@ -292,6 +333,7 @@ const Swap = () => {
                         icon={<ArrowDownIcon />}
                         size="sm"
                         variant="unstyled"
+                        onClick={tokenInvert}
                     />
                 </Box>
                 {/* tokenOut */}
@@ -303,8 +345,9 @@ const Swap = () => {
                     <TokenInput
                         tokenSymbol={tokenOutInfo.symbol}
                         value={tokenOutValue}
-                        onInputValue={onTokenOutInput}
+                        onChange={onTokenOutValueChange}
                         onSelectToken={onTokenOutSelect}
+                        isReadOnly={true}
                     />
                 </Box>
                 <Box h="10px"></Box>

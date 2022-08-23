@@ -157,8 +157,8 @@ export const SwapToken = async (token0Name, token0Input, token1Name) => {
 
 export const ApproveToken = async (tokenName, amount) => {
     console.log(`approveToken ${tokenName} ${amount}`);
-    const localProvider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
-    const localWallet = new ethers.Wallet(privateKey, localProvider);
+    // const localProvider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+    // const localWallet = new ethers.Wallet(privateKey, localProvider);
 
     const metamaskProvider = new ethers.providers.Web3Provider(window.ethereum);
     const metamaskSigner = metamaskProvider.getSigner();

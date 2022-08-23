@@ -1,14 +1,9 @@
 import React, { useState } from "react";
 import {
     Box,
-    Flex,
-    HStack,
-    Text,
-    Divider,
     Button,
     Drawer,
     DrawerBody,
-    DrawerFooter,
     DrawerHeader,
     DrawerOverlay,
     DrawerContent,
@@ -28,7 +23,6 @@ const SwapTest = ({ isOpen, onClose }) => {
     const [isLoading, setLoading] = useState(false);
     const showToast = () => {
         toast({
-            position: "top",
             description: 'finished',
             duration: 1500,
             status: 'success',
