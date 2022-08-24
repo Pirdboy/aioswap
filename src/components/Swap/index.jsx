@@ -57,8 +57,6 @@ const SwapChoice = ({
     )
 };
 
-let slippageToleranceValue = "0.5";
-
 const Swap = () => {
     const { address, chainId, isConnected } = useAccountContext();
 
@@ -72,6 +70,7 @@ const Swap = () => {
     const [forceUpdateAllowance, setForceUpdateAllowance] = useState(false);
     const [trade, setTrade] = useState();
     const [slippageTolerance, setSlippageTolerance] = useState('');
+    const [slippageToleranceValue, setSlippageToleranceValue] = useState('0.5');  // 主要是处理默认值
     const [price, setPrice] = useState('');
     const [priceInvert, setPriceInvert] = useState('');
     const [priceShowInvert, setPriceShowInvert] = useState(false);
@@ -83,12 +82,20 @@ const Swap = () => {
         setTokenOutValue('');
     };
     const setTradeInfo = (t) => {
-        t.trade && setTrade(t.trade);
-        t.price && setPrice(t.price);
-        t.priceInvert && setPriceInvert(t.priceInvert);
-        t.minimumReceived && setMinimumReceived(t.minimumReceived);
-        t.amountOut && setTokenOutValue(t.amountOut);
-        t.path && setTradePath(t.path);
+        setTrade(t.trade);
+        setPrice(t.price);
+        setPriceInvert(t.priceInvert);
+        setMinimumReceived(t.minimumReceived);
+        setTokenOutValue(t.amountOut);
+        setTradePath(t.path);
+    };
+    const clearTradeInfo = () => {
+        setTrade(null);
+        setPrice('');
+        setPriceInvert('');
+        setMinimumReceived('');
+        setTokenOutValue('');
+        setTradePath([]);
     };
     const tokenInvert = e => {
         e.preventDefault();
@@ -96,20 +103,6 @@ const Swap = () => {
         let tOut = tokenOutInfo;
         setTokenInInfo(tOut);
         setTokenOutInfo(tIn);
-    };
-    const onTokenInValueChange = async (val) => {
-        setTokenInValue(val);
-        if (!val) {
-            clearBothInput();
-            return;
-        }
-        const t = await getBestTradeExactIn(tokenInInfo, val, tokenOutInfo, slippageToleranceValue);
-        if (t) {
-            setTradeInfo(t);
-        }
-    };
-    const onTokenOutValueChange = async (val) => {
-        setTokenOutValue(val);
     };
     const onTokenInSelect = (tokenObj) => {
         if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenInInfo.symbol) {
@@ -129,7 +122,11 @@ const Swap = () => {
     };
     const onSlippageToleranceValueChange = val => {
         setSlippageTolerance(val);
-        slippageToleranceValue = val || "0.5";
+        let val2 = val || "0.5";
+        if(slippageToleranceValue !== val2) {
+            console.log('setSlippageToleranceValue', val2);
+            setSlippageToleranceValue(val2);
+        }
     };
     const onApproveClicked = async (e) => {
         e.preventDefault();
@@ -217,6 +214,30 @@ const Swap = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [forceUpdateAllowance])
 
+    // getBestTrade
+    useEffect(() => {
+        const getBestTrade = async () => {
+            if(!tokenInValue || parseFloat(tokenInValue) === 0) {
+                return;
+            }
+            const t = await getBestTradeExactIn(tokenInInfo, tokenInValue, tokenOutInfo, slippageToleranceValue);
+            if(t) {
+                setTradeInfo(t);
+            }
+        };
+        getBestTrade();
+    }, [tokenInInfo, tokenInValue, tokenOutInfo, slippageToleranceValue])
+
+    // clearTradeInfo
+    useEffect(() => {
+        const f = () => {
+            if(!tokenInValue || parseFloat(tokenInValue) === 0) {
+                clearTradeInfo();
+            }
+        };
+        f();
+    }, [tokenInValue])
+
     let buttonDisplay = 0;
     {
         const tokenInValueBalance = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenInInfo.decimals);
@@ -272,6 +293,15 @@ const Swap = () => {
         );
     }
 
+    let priceDisplay;
+    if(!tokenInValue || parseFloat(tokenInValue) === 0) {
+        priceDisplay = (<></>);
+    } else if(priceShowInvert){
+        priceDisplay = (<>{`1 ${tokenOutInfo.symbol} = ${priceInvert} ${tokenInInfo.symbol}`}</>)
+    } else {
+        priceDisplay = (<>{`1 ${tokenInInfo.symbol} = ${price} ${tokenOutInfo.symbol}`}</>)
+    }
+
     const tradePathDisplay = tradePath.map((e, i) =>
         i > 0
             ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
@@ -322,7 +352,7 @@ const Swap = () => {
                     <TokenInput
                         tokenSymbol={tokenInInfo.symbol}
                         value={tokenInValue}
-                        onChange={onTokenInValueChange}
+                        onChange={setTokenInValue}
                         onSelectToken={onTokenInSelect}
                     />
                 </Box>
@@ -345,7 +375,7 @@ const Swap = () => {
                     <TokenInput
                         tokenSymbol={tokenOutInfo.symbol}
                         value={tokenOutValue}
-                        onChange={onTokenOutValueChange}
+                        onChange={setTokenOutValue}
                         onSelectToken={onTokenOutSelect}
                         isReadOnly={true}
                     />
@@ -361,9 +391,7 @@ const Swap = () => {
                 <Flex justify="space-between">
                     <Center>Price</Center>
                     <Center>
-                        {priceShowInvert ?
-                            `1 ${tokenOutInfo.symbol} = ${priceInvert} ${tokenInInfo.symbol}` :
-                            `1 ${tokenInInfo.symbol} = ${price} ${tokenOutInfo.symbol}`}
+                        {priceDisplay}
                         <IconButton
                             pl="10px"
                             aria-label="transfer price"

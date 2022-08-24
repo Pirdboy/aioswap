@@ -30,6 +30,21 @@ const Account = () => {
     const { address, isConnected, chainId, onConnected, onDisconnected } = useAccountContext();
     const [balance, setBalance] = useState(TokenBalanceZero);
 
+    const connectWalletClicked = async (e) => {
+        e.preventDefault();
+        console.log('connectWalletClicked');
+        try {
+            const r = await connectMetaMask();
+            onConnected(r.address, r.chainId);
+        } catch (error) {
+            console.log('error', error);
+        }
+    };
+    const disconnectClicked = (e) => {
+        e.preventDefault();
+        onDisconnected();
+    };
+
     useEffect(() => {
         const checkConnect = async () => {
             try {
@@ -54,21 +69,6 @@ const Account = () => {
         fetchBalance();
     }, [address, isConnected]);
 
-    const connectWalletClicked = async (e) => {
-        e.preventDefault();
-        console.log('connectWalletClicked');
-        try {
-            const r = await connectMetaMask();
-            onConnected(r.address, r.chainId);
-        } catch (error) {
-            console.log('error', error);
-        }
-    };
-    const disconnectClicked = (e) => {
-        e.preventDefault();
-        onDisconnected();
-    };
-
     return (
         <Center justifyContent="space-between">
             {/* network choose(暂时先只支持hardhat) */}
@@ -87,12 +87,15 @@ const Account = () => {
                     </MenuList>
                 </Menu>
             </Box>
+            <Box w="5px"></Box>
             {/* Account Info */}
             {
                 isConnected ? (
                     <>
-                        <Center bg="black" color="white" h="100%">{`${balance.toString()} ETH`}</Center>
-                        <Center bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
+                        <Center borderRadius="10px" bg="black" color="white" h="100%">{`${balance.toString()} ETH`}</Center>
+                        <Box w="5px"></Box>
+                        <Center borderRadius="10px" bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
+                        <Box w="5px"></Box>
                         <Button colorScheme='yellow' size='sm' onClick={disconnectClicked}>Disconnect</Button>
                     </>
                 ) : (
