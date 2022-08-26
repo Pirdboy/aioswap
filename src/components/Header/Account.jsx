@@ -69,12 +69,14 @@ const Account = () => {
         fetchBalance();
     }, [address, isConnected]);
 
+    const height = "36px";
+
     return (
         <Center justifyContent="space-between">
             {/* network choose(暂时先只支持hardhat) */}
             <Box>
                 <Menu>
-                    <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+                    <MenuButton as={Button} h={height} rightIcon={<ChevronDownIcon />}>
                         Hardhat
                     </MenuButton>
                     <MenuList>
@@ -92,11 +94,11 @@ const Account = () => {
             {
                 isConnected ? (
                     <>
-                        <Center borderRadius="10px" bg="black" color="white" h="100%">{`${balance.toString()} ETH`}</Center>
+                        <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="black" color="white" >{`${balance.toString()} ETH`}</Center>
                         <Box w="5px"></Box>
-                        <Center borderRadius="10px" bg="gray" color="white" pl="2px" maxW="120px" h="100%" >{clippedAddress(address)}</Center>
+                        <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="gray" color="white">{clippedAddress(address)}</Center>
                         <Box w="5px"></Box>
-                        <Button colorScheme='yellow' size='sm' onClick={disconnectClicked}>Disconnect</Button>
+                        <Button h={height} colorScheme='yellow' size='sm' onClick={disconnectClicked}>Disconnect</Button>
                     </>
                 ) : (
                     <>

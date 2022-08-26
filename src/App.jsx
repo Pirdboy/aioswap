@@ -3,7 +3,7 @@ import './App.css';
 import Header from "./components/Header";
 import TestPanel from "./components/TestPanel";
 import Swap from "./components/Swap";
-import { ModalWarning, ModalTokenSelect } from "./components/Modal";
+import { ModalWarning } from "./components/Modal";
 import { Box, ChakraProvider } from '@chakra-ui/react';
 import { isMetaMaskInstall } from "./utils/EthersWrap";
 import AccountContextProvider from "./contexts/Account";
@@ -25,7 +25,6 @@ const App = () => {
 
     const [showMetaMaskWarning, setShowMetaMaskWarning] = useState(false);
     const [showNetworkWarning, setShowNetworkWarning] = useState(false);
-    const [showTokenList, setShowTokenList] = useState(false);
 
     useEffect(() => {
         if (!isMetaMaskInstall()) {
@@ -54,7 +53,6 @@ const App = () => {
                     >
                         {`Your wallet is not corrected to the right network, please connect to the hardhat local network at http://localhost:8545`}
                     </ModalWarning>
-                    <ModalTokenSelect isOpen={showTokenList} onClose={() => setShowTokenList(false)} />
                     <Header />
                     <Swap />
                 </Background>

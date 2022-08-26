@@ -7,7 +7,7 @@ const TestPanel = () => {
     return (
         <>
             <SwapTest isOpen={isSwapTestOpen} onClose={() => setSwapTestOpen(false)} />
-            <Box position="fixed" right="10px" bottom="10px" zIndex="9999">
+            <Box position="fixed" right="5px" bottom="5px" zIndex="9999">
                 <Button colorScheme="teal" onClick={() => setSwapTestOpen(true)}>SwapTest</Button>
             </Box>
         </>

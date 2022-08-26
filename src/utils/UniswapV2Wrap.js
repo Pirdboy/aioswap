@@ -10,7 +10,6 @@ import {TokenList, WETH } from '../constants/TokenList';
 import uniswapRouter02ABI from "../abis/uniswapRouter02ABI.json";
 import uniswapV2Pair from "../abis/IUniswapV2Pair.json";
 import { getEthersProvider } from "./EthersWrap";
-// import { getCreate2Address, solidityKeccak256, solidityPack } from 'ethers/lib/utils';
 
 const ethers = require('ethers');
 const UNISWAPV2_ROUTER02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
