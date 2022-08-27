@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import UniV2SwapTrade from "../utils/UniV2SwapTrade";
 import SushiSwapTrade from "../utils/SushiSwapTrade";
 
-function useBestTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageTolerance) {
+function useBestSwapTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageTolerance) {
     const [bestTrades, setBestTrades] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -37,4 +37,4 @@ function useBestTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageToleranc
     return {bestTrades, loading, error};
 }
 
-export default useBestTrades;
+export default useBestSwapTrades;

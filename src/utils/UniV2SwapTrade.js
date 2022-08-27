@@ -5,9 +5,9 @@ import UniswapV2PairABI from "../abis/IUniswapV2Pair.json";
 import UniswapV2Router02ABI from "../abis/IUniswapV2Router02.json";
 import { ethers } from "ethers";
 import {
-    UNISWAPV2_ROUTER02_ADDRESS,
-    UNISWAPV2_FACTORY_ADDRESS,
-    UNISWAPV2_PAIR_BYTECODE_HASH
+    UNISWAP_V2_ROUTER02_ADDRESS,
+    UNISWAP_V2_FACTORY_ADDRESS,
+    UNISWAP_V2_PAIR_BYTECODE_HASH
 } from "../constants/Uniswap";
 import { getCommonPairs, getPairAddress } from "./Pair";
 
@@ -52,7 +52,7 @@ class UniV2SwapTrade {
         const amountOutMin = ethers.BigNumber.from(trade.minimumAmountOut(this._slippageTolerancePercent).raw.toString());
         const path = trade.route.path.map(item => item.address);
         const uniswapRouter02 = new ethers.Contract(
-            UNISWAPV2_ROUTER02_ADDRESS,
+            UNISWAP_V2_ROUTER02_ADDRESS,
             UniswapV2Router02ABI,
             signer
         );
@@ -114,7 +114,7 @@ class UniV2SwapTrade {
         const fetchPairData = async (tokenA, tokenB) => {
             let pair;
             try {
-                const pairAddress = getPairAddress(UNISWAPV2_FACTORY_ADDRESS, tokenA, tokenB, UNISWAPV2_PAIR_BYTECODE_HASH);
+                const pairAddress = getPairAddress(UNISWAP_V2_FACTORY_ADDRESS, tokenA, tokenB, UNISWAP_V2_PAIR_BYTECODE_HASH);
                 const uniV2PairContract = new ethers.Contract(pairAddress, UniswapV2PairABI, ethersProvider);
                 const reserves = await uniV2PairContract.getReserves();
                 const token0Address = await uniV2PairContract.token0();
