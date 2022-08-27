@@ -104,7 +104,7 @@ const Swap = () => {
         tradesDisplay = (
             <Box>
                 <Box>{`兑换方案`}</Box>
-                <Box h="4px"></Box>
+                <Box h="8px"></Box>
                 {bestTrades.map((e, i) =>
                     <SwapChoice key={i} title={e.dexName} amountOut={e.amountOut} selected={i == selectedTradeIndex} onClick={() => setSelectedTradeIndex(i)} />
                 )}
@@ -406,14 +406,14 @@ const Swap = () => {
                 <Box h="10px"></Box>
                 {/* Best Trades */}
                 {tradesDisplay}
+                {/* Trade Detail */}
+                <Box h="8px"></Box>
+                {tradeDetailDisplay}
                 {/* buttons */}
                 <Box h="12px"></Box>
                 <Center>
                     <Button colorScheme="teal">button占位</Button>
                 </Center>
-                <Box h="16px"></Box>
-                {tradeDetailDisplay}
-
                 {/* price */}
                 {/* <Flex justify="space-between">
                     <Center>Price</Center>
