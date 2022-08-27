@@ -1,6 +1,7 @@
 import { Trade, Token, TokenAmount, Percent, Pair } from '@uniswap/sdk';
 import { getEthersProvider } from "./EthersWrap";
 import { WETH } from '../constants/TokenList';
+import { SUSHISWAP_NAME } from '../constants/DexName';
 import UniswapV2PairABI from "../abis/IUniswapV2Pair.json";
 import SushiswapRouterABI from "../abis/SushiswapRouter.json";
 import {ethers} from "ethers";
@@ -90,7 +91,7 @@ class SushiSwapTrade {
     }
     
     get dexName() {
-        return "Sushiswap";
+        return SUSHISWAP_NAME;
     }
     get price() {
         return this._trade?.executionPrice.toSignificant(6) ?? "";

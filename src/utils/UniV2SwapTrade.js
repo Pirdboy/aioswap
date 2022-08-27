@@ -1,6 +1,7 @@
 import { Trade, Token, TokenAmount, Percent, Pair } from '@uniswap/sdk';
 import { getEthersProvider } from "./EthersWrap";
 import { WETH } from '../constants/TokenList';
+import { UNISWAP_V2_NAME } from '../constants/DexName';
 import UniswapV2PairABI from "../abis/IUniswapV2Pair.json";
 import UniswapV2Router02ABI from "../abis/IUniswapV2Router02.json";
 import { ethers } from "ethers";
@@ -15,6 +16,9 @@ class UniV2SwapTrade {
     constructor(tokenIn, tokenInDisplayAmount, tokenOut, slippageTolerance) {
         this._tokenIn = tokenIn;
         this._tokenOut = tokenOut;
+        if(tokenIn.symbol === 'ETH') {
+            tokenIn = WETH;
+        }
         this._tokenInAmount = ethers.utils.parseUnits(tokenInDisplayAmount, tokenIn.decimals);
         this._slippageTolerancePercent = new Percent(Math.round(parseFloat(slippageTolerance) * 100), '10000');
         this._trade = null;
@@ -88,9 +92,9 @@ class UniV2SwapTrade {
             console.log(`Transaction was mined in block ${receipt.blockNumber}`);
         }
     }
-    
+
     get dexName() {
-        return "Uniswap V2";
+        return UNISWAP_V2_NAME;
     }
 
     get price() {

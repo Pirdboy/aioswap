@@ -6,7 +6,7 @@ import {
     Percent,
     Pair,
 } from '@uniswap/sdk';
-import {TokenList, WETH } from '../constants/TokenList';
+import { TokenList, WETH } from '../constants/TokenList';
 import UniswapRouter02ABI from "../abis/IUniswapV2Router02.json";
 import UniswapV2Pair from "../abis/IUniswapV2Pair.json";
 import { getEthersProvider } from "./EthersWrap";
@@ -74,7 +74,7 @@ const getSushiswapPairAddress = (tokenA, tokenB) => {
  * @param {string} tokenInValue 输入token金额
  * @param {object} tokenOut 输出token
  * @param {string} slippageTolerance 滑点容忍度,比如0.5%就传0.5
- * @return {Trade}
+ * @return {Promise<Trade>}
  */
 const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTolerance = "0.5") => {
     if (!tokenIn || !tokenInValue || !tokenOut || parseFloat(tokenInValue) === 0) {
@@ -102,7 +102,7 @@ const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTole
     const FetchPairData = async (tokenA, tokenB, aProvider) => {
         let pair;
         try {
-            const pairAddress = getSushiswapPairAddress(tokenA, tokenB); 
+            const pairAddress = getSushiswapPairAddress(tokenA, tokenB);
             const uniV2PairContract = new ethers.Contract(pairAddress, UniswapV2Pair.abi, aProvider);
             const reserves = await uniV2PairContract.getReserves();
             const token0Address = await uniV2PairContract.token0();
@@ -110,7 +110,7 @@ const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTole
             const token0 = [tokenA, tokenB].find(token => token.address === token0Address);
             const token1 = [tokenA, tokenB].find(token => token.address === token1Address);
             pair = new Pair(
-                new TokenAmount(token0, reserves.reserve0.toString()), 
+                new TokenAmount(token0, reserves.reserve0.toString()),
                 new TokenAmount(token1, reserves.reserve1.toString())
             )
             return pair;
@@ -121,7 +121,7 @@ const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTole
 
     let pairs = (arr) => arr.map((v, i) => arr.slice(i + 1).map(w => [v, w])).flat();
     let baseTokens = TokenList.filter(function (t) {
-        return ['SUSHI','DAI', 'USDC', 'USDT', 'COMP', 'WETH', 'MKR', 'LINK', tokenIn.symbol, tokenOut.symbol].includes(t.symbol)
+        return ['SUSHI', 'DAI', 'USDC', 'USDT', 'COMP', 'WETH', 'MKR', 'LINK', tokenIn.symbol, tokenOut.symbol].includes(t.symbol)
     }).map((el) => {
         return new Token(el.chainId, el.address, el.decimals, el.symbol, el.name)
     });
@@ -129,7 +129,7 @@ const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTole
     let listOfPairwiseTokens = pairs(baseTokens);
     console.log("listOfPairwiseTokens", listOfPairwiseTokens);
     const getPairs = async (list) => {
-        let listOfPromises = list.map(item => FetchPairData(item[0], item[1], ethersProvider) /*Fetcher.fetchPairData(item[0], item[1], ethersProvider)*/ )
+        let listOfPromises = list.map(item => FetchPairData(item[0], item[1], ethersProvider) /*Fetcher.fetchPairData(item[0], item[1], ethersProvider)*/)
         return Promise.all(listOfPromises.map(p => p.catch(() => undefined)));
     }
     let listOfPairs = await getPairs(listOfPairwiseTokens);
@@ -175,13 +175,13 @@ const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTole
  * @param {string} slippageTolerance
  * @returns {any}
  */
-const swapToken = async (trade, tokenIn, tokenInValue, tokenOut, slippageTolerance="0.5") => {
+const swapToken = async (trade, tokenIn, tokenInValue, tokenOut, slippageTolerance = "0.5") => {
     console.log("swapToken");
     const ethersProvider = getEthersProvider();
     const signer = ethersProvider.getSigner();
 
     const toAddress = await signer.getAddress();
-    console.log("chainId:",await signer.getChainId());
+    console.log("chainId:", await signer.getChainId());
     const tokenInAmount = ethers.utils.parseUnits(tokenInValue, tokenIn.decimals);
     const slippageTolerancePercent = new Percent(Math.round(parseFloat(slippageTolerance) * 100), '10000');
     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 最多等20分钟
@@ -191,24 +191,24 @@ const swapToken = async (trade, tokenIn, tokenInValue, tokenOut, slippageToleran
 
     console.log('path', path);
     console.log('amountOutMin', ethers.utils.formatUnits(amountOutMin, tokenOut.decimals));
-    
+
     const uniswapRouter02 = new ethers.Contract(
         UNISWAPV2_ROUTER02_ADDRESS,
         UniswapRouter02ABI,
         signer
     );
     console.log("uniswapRouter02", uniswapRouter02);
-    if(tokenIn.symbol === 'ETH') {
+    if (tokenIn.symbol === 'ETH') {
         const txResponse = await uniswapRouter02.swapExactETHForTokens(
             amountOutMin,
             path,
             toAddress,
             deadline,
-            {value: tokenInAmount, gasPrice: await ethersProvider.getGasPrice()}
+            { value: tokenInAmount, gasPrice: await ethersProvider.getGasPrice() }
         );
         const receipt = await txResponse.wait();
         console.log(`Transaction was mined in block ${receipt.blockNumber}`);
-    } else if(tokenOut.symbol === 'ETH') {
+    } else if (tokenOut.symbol === 'ETH') {
         const txResponse = await uniswapRouter02.swapExactTokensForETH(
             tokenInAmount,
             amountOutMin,

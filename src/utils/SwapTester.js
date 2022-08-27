@@ -8,7 +8,7 @@ import {
     Percent
 } from '@uniswap/sdk';
 import { ethers } from "ethers";
-import uniswapRouter02ABI from "../abis/uniswapRouter02ABI.json";
+import UniswapRouter02ABI from "../abis/IUniswapV2Router02.json";
 import tokenList from '../constants/TokenListTest';
 
 const chainId = ChainId.MAINNET;
@@ -98,7 +98,7 @@ const swapToken = async (token0Symbol, token0Input, token1Symbol, provider, sign
 
     const uniswapRouter02 = new ethers.Contract(
         uniswapRouter02Address,
-        uniswapRouter02ABI,
+        UniswapRouter02ABI,
         signer
     );
     if (token0Symbol === 'ETH') {

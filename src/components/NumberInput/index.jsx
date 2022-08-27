@@ -9,7 +9,7 @@ const NumberInput = ({
     const enforceNumber = e => {
         const value = e.target.value;
         if ((value === '' || value.match(/^[0-9]+\.?[0-9]*$/)) && value.length < 16) {
-            onChange(value);
+            onChange && onChange(value);
         }
     };
     return (
