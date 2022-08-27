@@ -59,7 +59,6 @@ const SwapChoice = ({
 
 const Swap = () => {
     const { address, chainId, isConnected } = useAccountContext();
-
     const [tokenInInfo, setTokenInInfo] = useState(DefaultTokenIn);
     const [tokenInBalance, setTokenInBalance] = useState(TokenBalanceZero);
     const [tokenInAllowance, setTokenInAllowance] = useState(TokenBalanceZero);

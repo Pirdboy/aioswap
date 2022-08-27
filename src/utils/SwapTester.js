@@ -9,7 +9,7 @@ import {
 } from '@uniswap/sdk';
 import { ethers } from "ethers";
 import uniswapRouter02ABI from "../abis/uniswapRouter02ABI.json";
-import tokenList from './TokenList';
+import tokenList from '../constants/TokenListTest';
 
 const chainId = ChainId.MAINNET;
 const privateKeys = [

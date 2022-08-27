@@ -1,9 +1,8 @@
 import TokenBalance from './TokenBalance';
-import ERC20ABI from '../abis/ERC20';
+import ERC20ABI from '../abis/ERC20-readable';
+import {ethers} from 'ethers';
 
-const ethers = require('ethers');
 const metaMaskProvider = new ethers.providers.Web3Provider(window.ethereum);
-const UNISWAP_ROUTER02_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 
 const ChainIdList = {
     0: 'none',
@@ -68,58 +67,60 @@ const getBalance = async (accountAddress) => {
 /**
  * 获取ERC20代币余额
  * @param {address} accountAddress 账户地址
- * @param {object} tokenInfo 代币信息
+ * @param {object} token 代币信息
  * @returns {Promise<TokenBalance>} 代币余额
  */
-const getERC20Balance = async (accountAddress, tokenInfo) => {
+const getERC20Balance = async (accountAddress, token) => {
     if (!accountAddress) {
         throw new Error('getERC20Balance accountAddress undefined');
     }
-    if (!tokenInfo.address) {
+    if (!token.address) {
         throw new Error('getERC20Balance tokenInfo.address undefined');
     }
 
-    const contract = new ethers.Contract(tokenInfo.address, ERC20ABI, metaMaskProvider);
+    const contract = new ethers.Contract(token.address, ERC20ABI, metaMaskProvider);
     const balance = await contract.balanceOf(accountAddress);
-    return TokenBalance.fromRawAmount(balance, tokenInfo.decimals);
+    return TokenBalance.fromRawAmount(balance, token.decimals);
 };
 
 /**
  * 获取erc20代币Router合约的批准额度
  * @param {string} ownerAddress 代币拥有者地址
- * @param {object} tokenInfo 代币信息
+ * @param {object} token 代币信息
+ * @param {string} spenderAddress 被批准人地址
  * @returns {Promise<TokenBalance>} 批准额度
  */
-const getERC20AllowanceOfRouter = async (ownerAddress, tokenInfo) => {
+const getERC20Allowance = async (ownerAddress, token, spenderAddress) => {
     if (!ownerAddress) {
         throw new Error('getERC20AllowanceOfRouter accountAddress undefined');
     }
-    if (!tokenInfo.address) {
-        throw new Error('getERC20AllowanceOfRouter tokenInfo.address undefined');
+    if (!token.address) {
+        throw new Error('getERC20AllowanceOfRouter token.address undefined');
     }
-    const contract = new ethers.Contract(tokenInfo.address, ERC20ABI, metaMaskProvider);
-    const allowance = await contract.allowance(ownerAddress, UNISWAP_ROUTER02_ADDRESS);
-    return TokenBalance.fromRawAmount(allowance, tokenInfo.decimals);
+    const contract = new ethers.Contract(token.address, ERC20ABI, metaMaskProvider);
+    const allowance = await contract.allowance(ownerAddress, spenderAddress);
+    return TokenBalance.fromRawAmount(allowance, token.decimals);
 };
 
 /**
  * ERC20代币批准Router合约
- * @param {object} tokenInfo 代币信息
+ * @param {object} token 代币信息
  * @param {string} displayAmount 代币金额(显示)
+ * @param {string} spenderAddress 被批准人地址
  * @returns {any}
  */
-const approveRouter = async (tokenInfo, displayAmount) => {
-    if (!tokenInfo?.address) {
-        throw new Error('approveRouter tokenInfo.address undefined');
+const approveERC20 = async (token, displayAmount, spenderAddress) => {
+    if (!token?.address) {
+        throw new Error('approveRouter token.address undefined');
     }
     if(!displayAmount) {
         throw new Error('approveRouter displayAmount invalid',displayAmount);
     }
     const signer = metaMaskProvider.getSigner();
-    const contract = new ethers.Contract(tokenInfo.address, ERC20ABI, signer);
+    const contract = new ethers.Contract(token.address, ERC20ABI, signer);
     let txResponse = await contract.approve(
-        UNISWAP_ROUTER02_ADDRESS,
-        ethers.utils.parseUnits(displayAmount, tokenInfo.decimals),
+        spenderAddress,
+        ethers.utils.parseUnits(displayAmount, token.decimals),
     )
     let receipt = await txResponse.wait();
     console.log(`approveRouter Transaction was mined in block ${receipt.blockNumber}`);
@@ -129,10 +130,10 @@ const approveRouter = async (tokenInfo, displayAmount) => {
 export {
     checkIfConnectMetaMask,
     connectMetaMask,
-    approveRouter,
+    approveERC20,
     getBalance,
     getERC20Balance,
-    getERC20AllowanceOfRouter,
+    getERC20Allowance,
     getEthersProvider,
     getChainId,
     getChainName,

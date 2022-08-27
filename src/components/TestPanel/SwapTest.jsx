@@ -11,7 +11,7 @@ import {
     useToast,
     Spinner
 } from '@chakra-ui/react'
-import tokenList from "../../utils/TokenList";
+import tokenList from "../../constants/TokenListTest";
 import {
     SwapToken,
     SwapTokenUseMetaMask,

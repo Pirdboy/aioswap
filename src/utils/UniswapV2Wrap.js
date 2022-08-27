@@ -7,8 +7,8 @@ import {
     Pair,
 } from '@uniswap/sdk';
 import {TokenList, WETH } from '../constants/TokenList';
-import uniswapRouter02ABI from "../abis/uniswapRouter02ABI.json";
-import uniswapV2Pair from "../abis/IUniswapV2Pair.json";
+import UniswapRouter02ABI from "../abis/IUniswapV2Router02.json";
+import UniswapV2Pair from "../abis/IUniswapV2Pair.json";
 import { getEthersProvider } from "./EthersWrap";
 
 const ethers = require('ethers');
@@ -103,7 +103,7 @@ const getBestTradeExactIn = async (tokenIn, tokenInValue, tokenOut, slippageTole
         let pair;
         try {
             const pairAddress = getSushiswapPairAddress(tokenA, tokenB); 
-            const uniV2PairContract = new ethers.Contract(pairAddress, uniswapV2Pair.abi, aProvider);
+            const uniV2PairContract = new ethers.Contract(pairAddress, UniswapV2Pair.abi, aProvider);
             const reserves = await uniV2PairContract.getReserves();
             const token0Address = await uniV2PairContract.token0();
             const token1Address = await uniV2PairContract.token1();
@@ -194,7 +194,7 @@ const swapToken = async (trade, tokenIn, tokenInValue, tokenOut, slippageToleran
     
     const uniswapRouter02 = new ethers.Contract(
         UNISWAPV2_ROUTER02_ADDRESS,
-        uniswapRouter02ABI,
+        UniswapRouter02ABI,
         signer
     );
     console.log("uniswapRouter02", uniswapRouter02);
