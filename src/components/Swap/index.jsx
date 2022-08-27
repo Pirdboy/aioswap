@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Box, Flex, Center, IconButton, Button, Divider, Icon, Text, InputGroup, InputRightElement, Spinner } from '@chakra-ui/react';
 import {
     Popover,
@@ -13,16 +13,19 @@ import {
 } from '@chakra-ui/react';
 import { SettingsIcon, ChevronDownIcon, ArrowDownIcon } from '@chakra-ui/icons';
 import { IoRepeat, IoChevronForward } from 'react-icons/io5';
-
 import { ModalTokenSelect } from "../Modal";
 import NumberInput from "../NumberInput";
 import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
-import { getERC20Balance, getBalance, getERC20AllowanceOfRouter, approveRouter } from "../../utils/EthersWrap";
-import TokenBalance, { TokenBalanceZero } from "../../utils/TokenBalance";
-import { getBestTradeExactIn, swapToken } from "../../utils/UniswapV2Wrap";
+import { UNISWAP_V2_NAME, SUSHISWAP_NAME } from "../../constants/DexName";
+import { UNISWAP_V2_ROUTER02_ADDRESS } from "../../constants/Uniswap";
+import { SUSHISWAP_ROUTER_ADDRESS } from "../../constants/Sushiswap";
+import TokenBalance, {TokenBalanceZero} from "../../utils/TokenBalance";
 import { useAccountContext } from "../../contexts/Account";
-
 import useBestSwapTrades from "../../hooks/useBestSwapTrades";
+import useBalance from "../../hooks/useBalance";
+import useSwapAllowances from "../../hooks/useSwapAllowances";
+import { approveERC20 } from "../../utils/EthersWrap";
+
 
 const TokenInput = ({
     tokenSymbol,
@@ -60,170 +63,25 @@ const SwapChoice = ({
 };
 
 const Swap = () => {
+    // ----------------- hooks -----------------
     const { address, chainId, isConnected } = useAccountContext();
-
+    const [slippageTolerance, setSlippageTolerance] = useState('');
     const [tokenIn, setTokenIn] = useState(DefaultTokenIn);
-    const [tokenInBalance, setTokenInBalance] = useState(TokenBalanceZero);
     const [tokenInValue, setTokenInValue] = useState('');
-
+    const {balance: tokenInBalance} = useBalance(tokenIn, address, isConnected);
     const [tokenOut, setTokenOut] = useState(DefaultTokenOut);
-    const [tokenOutBalance, setTokenOutBalance] = useState(TokenBalanceZero);
-
+    const {balance: tokenOutBalance} = useBalance(tokenOut, address, isConnected);
     // const [tokenInAllowance, setTokenInAllowance] = useState(TokenBalanceZero);
     // const [forceUpdateAllowance, setForceUpdateAllowance] = useState(false);
-
-    const [slippageTolerance, setSlippageTolerance] = useState('');
-
-    // const [trade, setTrade] = useState();
-    // const [price, setPrice] = useState('');
-    // const [priceInvert, setPriceInvert] = useState('');
-    // const [minimumReceived, setMinimumReceived] = useState('');
-    // const [tradePath, setTradePath] = useState([]);
-
-    const [priceShowInvert, setPriceShowInvert] = useState(false);
-
-    const { bestTrades, loading: loadingTrades } = useBestSwapTrades(tokenIn, tokenInValue, tokenOut, slippageTolerance || "0.5");
     const [selectedTradeIndex, setSelectedTradeIndex] = useState(0);
-    let tradesDisplayList = bestTrades?.map((e, i) =>
-        <SwapChoice key={i} title={e.dexName} amountOut={e.amountOut} selected={i == selectedTradeIndex} onClick={() => setSelectedTradeIndex(i)} />
-    );
-    let selectedTrade = bestTrades?.at(selectedTradeIndex);
+    const cb = useCallback(()=>{
+        console.log('setSelectedTradeIndex(0)');
+        setSelectedTradeIndex(0);
+    },[]);
 
-    let tradesDisplay = null;
-    let tokenOutValue = "";
-    let tradeDetailDisplay = null;
-    if (loadingTrades) {
-        tradesDisplay = (
-            <Flex>
-                <Spinner />
-                <Box w="4px"></Box>
-                <Box>正在获取最优兑换方案...</Box>
-            </Flex>
-        )
-    } else if (bestTrades) {
-        tradesDisplay = (
-            <Box>
-                <Box>{`兑换方案`}</Box>
-                <Box h="8px"></Box>
-                {bestTrades.map((e, i) =>
-                    <SwapChoice key={i} title={e.dexName} amountOut={e.amountOut} selected={i == selectedTradeIndex} onClick={() => setSelectedTradeIndex(i)} />
-                )}
-            </Box>
-        )
-        tokenOutValue = bestTrades[selectedTradeIndex].amountOut;
-        tradeDetailDisplay = (
-            <Box>
-                <Flex alignItems="center">
-                    {`1 ${tokenIn.symbol} = ${bestTrades[selectedTradeIndex].price} ${tokenOut.symbol}`}
-                </Flex>
-                <Flex alignItems="center">
-                    {`1 ${tokenOut.symbol} = ${bestTrades[selectedTradeIndex].priceInvert} ${tokenIn.symbol}`}
-                </Flex>
-                <Flex justify="space-between">
-                    <Center>{`Minimum received`}</Center>
-                    <Center>{`${bestTrades[selectedTradeIndex].minimumReceived} ${tokenOut.symbol}`}</Center>
-                </Flex>
-                <Flex justify="space-between">
-                    <Center>Route</Center>
-                    <Center>{bestTrades[selectedTradeIndex].path.join(' > ')}</Center>
-                </Flex>
-            </Box>
-        )
-    }
-
-
-
-
-    const clearBothInput = () => {
-        setTokenInValue('');
-    };
-    // const setTradeInfo = (t) => {
-    //     setTrade(t.trade);
-    //     setPrice(t.price);
-    //     setPriceInvert(t.priceInvert);
-    //     setMinimumReceived(t.minimumReceived);
-    //     setTokenOutValue(t.amountOut);
-    //     setTradePath(t.path);
-    // };
-    // const clearTradeInfo = () => {
-    //     setTrade(null);
-    //     setPrice('');
-    //     setPriceInvert('');
-    //     setMinimumReceived('');
-    //     setTokenOutValue('');
-    //     setTradePath([]);
-    // };
-    const tokenInvert = e => {
-        e.preventDefault();
-        let tIn = tokenIn;
-        let tOut = tokenOut;
-        setTokenIn(tOut);
-        setTokenOut(tIn);
-    };
-    const onTokenInSelect = (tokenObj) => {
-        if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenIn.symbol) {
-            return;
-        }
-        console.log('onTokenInSelect', tokenObj);
-        setTokenIn(tokenObj);
-        clearBothInput();
-    };
-    const onTokenOutSelect = (tokenObj) => {
-        if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenOut.symbol) {
-            return;
-        }
-        console.log('onTokenOutSelect', tokenObj);
-        setTokenOut(tokenObj);
-        clearBothInput();
-    };
-    // const onApproveClicked = async (e) => {
-    //     e.preventDefault();
-    //     console.log('onApproveClicked');
-    //     await approveRouter(tokenIn, tokenInValue);
-    //     setForceUpdateAllowance(true);
-    // };
-
-    // const onSwapClicked = async (e) => {
-    //     e.preventDefault();
-    //     console.log('onSwapClicked');
-    //     await swapToken(trade, tokenIn, tokenInValue, tokenOut, slippageTolerance || '0.5');
-    // }
-
-    // fetchTokenInBalance
-    // useEffect(() => {
-    //     const fetchTokenInBalance = async () => {
-    //         if (!isConnected) {
-    //             setTokenInBalance(TokenBalanceZero);
-    //             return;
-    //         }
-    //         let balance;
-    //         if (tokenIn.symbol === 'ETH') {
-    //             balance = await getBalance(address);
-    //         } else {
-    //             balance = await getERC20Balance(address, tokenIn);
-    //         }
-    //         setTokenInBalance(balance);
-    //     };
-    //     fetchTokenInBalance();
-    // }, [tokenIn, address, isConnected]);
-
-    // fetchTokenOutBalance
-    // useEffect(() => {
-    //     const fetchTokenOutBalance = async () => {
-    //         if (!isConnected) {
-    //             setTokenOutBalance(TokenBalanceZero);
-    //             return;
-    //         }
-    //         let balance;
-    //         if (tokenOut.symbol === 'ETH') {
-    //             balance = await getBalance(address);
-    //         } else {
-    //             balance = await getERC20Balance(address, tokenOut);
-    //         }
-    //         setTokenOutBalance(balance);
-    //     };
-    //     fetchTokenOutBalance();
-    // }, [tokenOut, address, isConnected]);
+    const { bestTrades, loading: loadingTrades } = useBestSwapTrades(tokenIn, tokenInValue, tokenOut, slippageTolerance || "0.5", cb);
+    
+    const {allowances, setForceUpdateAllowance} = useSwapAllowances(tokenIn, isConnected, address);
 
     // fetchTokenInAlowance
     // useEffect(() => {
@@ -262,75 +120,126 @@ const Swap = () => {
     //     // eslint-disable-next-line react-hooks/exhaustive-deps
     // }, [forceUpdateAllowance])
 
-    // let buttonDisplay = 0;
-    // {
-    //     const tokenInValueBalance = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenIn.decimals);
-    //     if (tokenInValueBalance.eq(TokenBalanceZero)) {
-    //         buttonDisplay = 1;   // input zero: Enter Amount
-    //     } else if (tokenInValueBalance.gt(tokenInBalance)) {
-    //         buttonDisplay = 2;   // Insufficient Balance
-    //     } else if (tokenIn.symbol === 'ETH') {
-    //         buttonDisplay = 3;  // swap button
-    //     } else {
-    //         if (tokenInValueBalance.gt(tokenInAllowance)) {
-    //             buttonDisplay = 4; // approve and disabled swap
-    //         } else {
-    //             buttonDisplay = 3; // swap button
-    //         }
-    //     }
-    // }
+    // ----------------- handler -----------------
+    const onTokenInvertClick = e => {
+        e.preventDefault();
+        let tIn = tokenIn;
+        let tOut = tokenOut;
+        setTokenIn(tOut);
+        setTokenOut(tIn);
+    };
+    const onTokenInSelect = (tokenObj) => {
+        if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenIn.symbol) {
+            return;
+        }
+        console.log('onTokenInSelect', tokenObj);
+        setTokenIn(tokenObj);
+        setTokenInValue('');
+    };
+    const onTokenOutSelect = (tokenObj) => {
+        if (!tokenObj || !tokenObj.symbol || tokenObj.symbol === tokenOut.symbol) {
+            return;
+        }
+        console.log('onTokenOutSelect', tokenObj);
+        setTokenOut(tokenObj);
+        setTokenInValue('');
+    };
 
-    // let buttons;
-    // if (buttonDisplay === 1) {
-    //     buttons = (
-    //         <>
-    //             <Flex>
-    //                 <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'>Enter Amount</Button>
-    //             </Flex>
-    //         </>
-    //     );
-    // } else if (buttonDisplay === 2) {
-    //     buttons = (
-    //         <>
-    //             <Flex>
-    //                 <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'> Insufficient {tokenIn.symbol} balance</Button>
-    //             </Flex>
-    //         </>
-    //     );
-    // } else if (buttonDisplay === 3) {
-    //     buttons = (
-    //         <>
-    //             <Center>
-    //                 <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>
-    //             </Center>
-    //         </>
-    //     );
-    // } else if (buttonDisplay === 4) {
-    //     buttons = (
-    //         <>
-    //             <Center>
-    //                 <Button onClick={onApproveClicked} colorScheme='blue'>{`Approve ${tokenIn.symbol} Token`}</Button>
-    //                 <Box w="10px"></Box>
-    //                 <Button isDisabled={true} colorScheme='whiteAlpha'>Swap</Button>
-    //             </Center>
-    //         </>
-    //     );
-    // }
+    const onApproveClicked = async (e) => {
+        // e.preventDefault();
+        console.log('onApproveClicked');
+        let spender;
+        if(bestTrades[selectedTradeIndex].dexName === UNISWAP_V2_NAME) {
+            spender = UNISWAP_V2_ROUTER02_ADDRESS;
+        } else if(bestTrades[selectedTradeIndex].dexName === SUSHISWAP_NAME) {
+            spender = SUSHISWAP_ROUTER_ADDRESS;
+        }
+        await approveERC20(tokenIn, tokenInValue, spender);
+        setForceUpdateAllowance(true);
+    };
 
-    // let priceDisplay;
-    // if(!tokenInValue || parseFloat(tokenInValue) === 0) {
-    //     priceDisplay = (<></>);
-    // } else if(priceShowInvert){
-    //     priceDisplay = (<>{`1 ${tokenOut.symbol} = ${priceInvert} ${tokenIn.symbol}`}</>)
-    // } else {
-    //     priceDisplay = (<>{`1 ${tokenIn.symbol} = ${price} ${tokenOut.symbol}`}</>)
-    // }
+    const onSwapClicked = async (e) => {
+        // e.preventDefault();
+        console.log('onSwapClicked');
+        // await swapToken(trade, tokenIn, tokenInValue, tokenOut, slippageTolerance || '0.5');
+    }
 
-    // const tradePathDisplay = tradePath.map((e, i) =>
-    //     i > 0
-    //         ? (<Center key={i}><Icon as={IoChevronForward} />{e}</Center>)
-    //         : (<Center key={i}>{e}</Center>)
-    // )
+    // ----------------- Components -----------------
+    let tradesDisplay = null;
+    let tokenOutValue = "";
+    let tradeDetailDisplay = null;
+    let selectedTrade = null;
+    if (loadingTrades) {
+        tradesDisplay = (
+            <Flex>
+                <Spinner />
+                <Box w="4px"></Box>
+                <Box>正在获取最优兑换方案...</Box>
+            </Flex>
+        )
+    } else if (bestTrades) {
+        tradesDisplay = (
+            <Box>
+                <Box>{`兑换方案`}</Box>
+                <Box h="8px"></Box>
+                {bestTrades.map((e, i) =>
+                    <SwapChoice key={i} title={e.dexName} amountOut={e.amountOut} selected={i === selectedTradeIndex} onClick={() => setSelectedTradeIndex(i)} />
+                )}
+            </Box>
+        )
+        selectedTrade = bestTrades[selectedTradeIndex];
+        tokenOutValue = bestTrades[selectedTradeIndex].amountOut;
+        tradeDetailDisplay = (
+            <Box>
+                <Flex alignItems="center">
+                    {`1 ${tokenIn.symbol} = ${bestTrades[selectedTradeIndex].price} ${tokenOut.symbol}`}
+                </Flex>
+                <Flex alignItems="center">
+                    {`1 ${tokenOut.symbol} = ${bestTrades[selectedTradeIndex].priceInvert} ${tokenIn.symbol}`}
+                </Flex>
+                <Flex justify="space-between">
+                    <Center>{`Minimum received`}</Center>
+                    <Center>{`${bestTrades[selectedTradeIndex].minimumReceived} ${tokenOut.symbol}`}</Center>
+                </Flex>
+                <Flex justify="space-between">
+                    <Center>Route</Center>
+                    <Center>{bestTrades[selectedTradeIndex].path.join(' > ')}</Center>
+                </Flex>
+            </Box>
+        )
+    }
+   
+    let buttonDisplay = null;
+    const tokenInAmount = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenIn.decimals);
+    if(tokenInAmount.eq(TokenBalanceZero)) {
+        buttonDisplay = (
+            <Flex>
+                <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'>Enter Amount</Button>
+            </Flex>
+        );
+    } else if(loadingTrades || !selectedTrade) {
+        buttonDisplay = null;
+    } else if (tokenInAmount.gt(tokenInBalance)) {
+        buttonDisplay = (
+            <Flex>
+                <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'> Insufficient {tokenIn.symbol} balance</Button>
+            </Flex>
+        );
+    } else if(tokenIn.symbol === 'ETH' || tokenInAmount.lte(allowances[selectedTrade.dexName])) {
+        buttonDisplay = (
+            <Center>
+                <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>
+            </Center>
+        );
+    } else {
+        buttonDisplay = (
+            <Center>
+                <Button onClick={onApproveClicked} colorScheme='blue'>{`Approve ${tokenIn.symbol} Token`}</Button>
+                <Box w="10px"></Box>
+                <Button isDisabled={true} colorScheme='whiteAlpha'>Swap</Button>
+            </Center>
+        );
+    }
 
     return (
         <Center bg="gray.600" w="100%" pt="60px">
@@ -387,7 +296,7 @@ const Swap = () => {
                         icon={<ArrowDownIcon />}
                         size="sm"
                         variant="unstyled"
-                        onClick={tokenInvert}
+                        onClick={onTokenInvertClick}
                     />
                 </Box>
                 {/* tokenOut */}
@@ -412,7 +321,7 @@ const Swap = () => {
                 {/* buttons */}
                 <Box h="12px"></Box>
                 <Center>
-                    <Button colorScheme="teal">button占位</Button>
+                    {buttonDisplay}
                 </Center>
                 {/* price */}
                 {/* <Flex justify="space-between">

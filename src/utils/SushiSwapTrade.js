@@ -16,6 +16,9 @@ class SushiSwapTrade {
     constructor(tokenIn, tokenInDisplayAmount, tokenOut, slippageTolerance) {
         this._tokenIn = tokenIn;
         this._tokenOut = tokenOut;
+        if(tokenIn.symbol === 'ETH') {
+            tokenIn = WETH;
+        }
         this._tokenInAmount = ethers.utils.parseUnits(tokenInDisplayAmount, tokenIn.decimals);
         this._slippageTolerancePercent = new Percent(Math.round(parseFloat(slippageTolerance) * 100), '10000');
         this._trade = null;

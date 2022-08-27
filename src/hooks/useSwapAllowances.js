@@ -45,12 +45,14 @@ function useSwapAllowances(token, isConnected, account) {
             }
             let uni = await getERC20Allowance(account, token, UNISWAP_V2_ROUTER02_ADDRESS);
             let sushi = await getERC20Allowance(account, token, SUSHISWAP_ROUTER_ADDRESS);
+            setForceUpdateAllowance(false);
             setAllowances({
                 [UNISWAP_V2_NAME]: uni,
                 [SUSHISWAP_NAME]: sushi
             });
         };
         fetchTokenAllowance();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [forceUpdateAllowance])
 
     return {
