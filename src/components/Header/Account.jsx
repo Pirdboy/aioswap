@@ -9,18 +9,10 @@ import {
     MenuList,
     Button
 } from '@chakra-ui/react';
-
-import {
-    checkIfConnectMetaMask,
-    getBalance,
-    connectMetaMask
-} from '../../utils/EthersWrap';
-
-import {TokenBalanceZero} from "../../utils/TokenBalance";
-
-import {
-    useAccountContext
-} from "../../contexts/Account"
+import { checkIfConnectMetaMask, connectMetaMask } from '../../utils/EthersWrap';
+import { useAccountContext } from "../../contexts/Account"
+import useBalance  from "../../hooks/useBalance";
+import {ETH} from "../../constants/TokenList";
 
 function clippedAddress(addr) {
     return addr && addr.slice(0, 6) + '...' + addr.slice(addr.length - 4, addr.length);
@@ -28,7 +20,7 @@ function clippedAddress(addr) {
 
 const Account = () => {
     const { address, isConnected, chainId, onConnected, onDisconnected } = useAccountContext();
-    const [balance, setBalance] = useState(TokenBalanceZero);
+    const { balance } = useBalance(ETH, address, isConnected);
 
     const connectWalletClicked = async (e) => {
         e.preventDefault();
@@ -56,18 +48,6 @@ const Account = () => {
         }
         checkConnect();
     }, []);
-
-    useEffect(() => {
-        const fetchBalance = async () => {
-            if(!isConnected) {
-                setBalance(TokenBalanceZero);
-                return;
-            }
-            const b = await getBalance(address);
-            setBalance(b);
-        };
-        fetchBalance();
-    }, [address, isConnected]);
 
     const height = "36px";
 
