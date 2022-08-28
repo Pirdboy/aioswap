@@ -25,6 +25,7 @@ import useBestSwapTrades from "../../hooks/useBestSwapTrades";
 import useBalance from "../../hooks/useBalance";
 import useSwapAllowances from "../../hooks/useSwapAllowances";
 import { approveERC20 } from "../../utils/EthersWrap";
+import { isWrappedToken } from "../../utils/WrappedToken";
 
 
 const TokenInput = ({
@@ -72,54 +73,12 @@ const Swap = () => {
     const {balance: tokenInBalance} = useBalance(tokenIn, address, isConnected);
     const [tokenOut, setTokenOut] = useState(DefaultTokenOut);
     const {balance: tokenOutBalance} = useBalance(tokenOut, address, isConnected);
-    // const [tokenInAllowance, setTokenInAllowance] = useState(TokenBalanceZero);
-    // const [forceUpdateAllowance, setForceUpdateAllowance] = useState(false);
     const [selectedTradeIndex, setSelectedTradeIndex] = useState(0);
     const cb = useCallback(()=>{
-        console.log('setSelectedTradeIndex(0)');
         setSelectedTradeIndex(0);
     },[]);
-
-    const { bestTrades, loading: loadingTrades } = useBestSwapTrades(tokenIn, tokenInValue, tokenOut, slippageTolerance || "0.5", cb);
-    
+    const { bestTrades, wrappedTokenTrade, loading: loadingTrades } = useBestSwapTrades(tokenIn, tokenInValue, tokenOut, slippageTolerance || "0.5", cb);
     const {allowances, setForceUpdateAllowance} = useSwapAllowances(tokenIn, isConnected, address);
-
-    // fetchTokenInAlowance
-    // useEffect(() => {
-    //     const fetchTokenInAlowance = async () => {
-    //         if (!isConnected) {
-    //             return;
-    //         }
-    //         if (tokenIn.symbol === 'ETH') {
-    //             return;
-    //         }
-    //         const allowance = await getERC20AllowanceOfRouter(address, tokenIn);
-    //         console.log('fetchTokenInAlowance allowance', allowance.toString());
-    //         setTokenInAllowance(allowance);
-    //     };
-    //     fetchTokenInAlowance();
-    // }, [tokenIn, isConnected, address])
-
-    // forceUpdateTokenInAllowance
-    // useEffect(() => {
-    //     const fetchTokenInAllowance = async () => {
-    //         if (!forceUpdateAllowance) {
-    //             return;
-    //         }
-    //         if (!isConnected) {
-    //             return;
-    //         }
-    //         if (tokenIn.symbol === 'ETH') {
-    //             return;
-    //         }
-    //         const allowance = await getERC20AllowanceOfRouter(address, tokenIn);
-    //         console.log('fetchTokenInAlowance(forced) allowance', allowance.toString());
-    //         setTokenInAllowance(allowance);
-    //         setForceUpdateAllowance(false);
-    //     };
-    //     fetchTokenInAllowance();
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [forceUpdateAllowance])
 
     // ----------------- handler -----------------
     const onTokenInvertClick = e => {
@@ -159,7 +118,14 @@ const Swap = () => {
 
     const onSwapClicked = async (e) => {
         console.log('onSwapClicked');
-        // await swapToken(trade, tokenIn, tokenInValue, tokenOut, slippageTolerance || '0.5');
+        if(wrappedTokenTrade) {
+            await wrappedTokenTrade.executeTrade();
+            return;
+        }
+        let selectedTrade = bestTrades?.at(selectedTradeIndex)
+        if(selectedTrade) {
+            await selectedTrade.executeTrade();
+        }
     }
 
     // ----------------- Components -----------------
@@ -205,6 +171,8 @@ const Swap = () => {
                 </Flex>
             </Box>
         )
+    } else if(wrappedTokenTrade) {
+        tokenOutValue = wrappedTokenTrade.amountOut;
     }
    
     let buttonDisplay = null;
@@ -215,14 +183,20 @@ const Swap = () => {
                 <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'>Enter Amount</Button>
             </Flex>
         );
-    } else if(loadingTrades || !selectedTrade) {
-        buttonDisplay = null;
     } else if (tokenInAmount.gt(tokenInBalance)) {
         buttonDisplay = (
             <Flex>
                 <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'> Insufficient {tokenIn.symbol} balance</Button>
             </Flex>
         );
+    } else if(isWrappedToken(tokenIn, tokenOut)) {
+        buttonDisplay = (
+            <Center>
+                <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>
+            </Center>
+        );
+    } else if(loadingTrades || !selectedTrade) {
+        buttonDisplay = null;
     } else if(tokenIn.symbol === 'ETH' || tokenInAmount.lte(allowances[selectedTrade.dexName])) {
         buttonDisplay = (
             <Center>

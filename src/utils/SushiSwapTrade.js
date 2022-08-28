@@ -31,7 +31,6 @@ class SushiSwapTrade {
         let tokenB = new Token(t.chainId, t.address, t.decimals, t.symbol, t.name);
 
         let allCommonPairs = getCommonPairs(tokenA, tokenB);
-        console.log('allCommonPairs', allCommonPairs);
         const pairsData = await this._getPairsData(allCommonPairs);
     
         let bestTrades = Trade.bestTradeExactIn(
