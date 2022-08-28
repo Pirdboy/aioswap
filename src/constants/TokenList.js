@@ -1369,19 +1369,18 @@ const TokenList = [
 
 const RecommandedTokenList = [
     {
-        "address": "",
         "chainId": 1,
         "name": "Ether",
         "symbol": "ETH",
-        "decimals": 0,
+        "decimals": 18
     },
     {
-        "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
         "chainId": 1,
-        "name": "DaiStablecoin",
+        "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "name": "Dai Stablecoin",
         "symbol": "DAI",
         "decimals": 18,
-        "logoURI": "https://tokens.1inch.io/0x6b175474e89094c44da98b954eedeac495271d0f.png"
+        "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png"
     },
     {
         "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",

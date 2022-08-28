@@ -15,7 +15,7 @@ import {
     ModalCloseButton
 } from '@chakra-ui/react';
 
-import {TokenList, RecommandedTokenList } from "../../constants/TokenList";
+import { TokenList, RecommandedTokenList } from "../../constants/TokenList";
 
 const ModalWarning = ({ isOpen, title, onClose, children }) => {
     return (
@@ -41,7 +41,7 @@ const ModalWarning = ({ isOpen, title, onClose, children }) => {
  * @param isOpen boolean
  * @param onSelectToken function(tokenObj)
  */
-const ModalTokenSelect = ({ isOpen, onSelectToken }) => {
+const ModalTokenSelect = ({ isOpen, onSelectToken, disabledToken }) => {
     const onClose = t => {
         onSelectToken && onSelectToken(t);
     };
@@ -59,6 +59,12 @@ const ModalTokenSelect = ({ isOpen, onSelectToken }) => {
         const patt2 = patt.toLowerCase();
         return symbol.indexOf(patt2) >= 0 || name.indexOf(patt2) >= 0;
     };
+    const isTokenEqual = (t1, t2) => {
+        if(!t1 || !t2) {
+            return false;
+        }
+        return t1.address === t2.address;
+    }
 
     return (
         <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={() => onClose()}>
@@ -74,7 +80,7 @@ const ModalTokenSelect = ({ isOpen, onSelectToken }) => {
                     <Flex>
                         <Wrap spacing="10px">
                             {RecommandedTokenList.map((e, i) => (
-                                <Button key={i} variant="outline" onClick={() => onClose(e)}>{e.symbol}</Button>
+                                <Button key={i} isDisabled={isTokenEqual(e, disabledToken)} variant="outline" onClick={() => onClose(e)}>{e.symbol}</Button>
                             ))}
                         </Wrap>
                     </Flex>
@@ -82,12 +88,19 @@ const ModalTokenSelect = ({ isOpen, onSelectToken }) => {
                     <Divider />
                     <Flex h='10px'></Flex>
                     <Box h="300px" overflow="scroll">
-                        {TokenList.filter((e) => tokenFilter(e, searchText)).map((e, i) => (
-                            <Box _hover={{ bg: 'blue.600' }} border="1px solid white" borderRadius="5px" key={i} onClick={() => onClose(e)}>
-                                <Box>{e.symbol}</Box>
-                                <Box color="whiteAlpha.500">{e.name}</Box>
-                            </Box>
-                        ))}
+                        {TokenList.filter((e) => tokenFilter(e, searchText)).map((e, i) => 
+                            isTokenEqual(e, disabledToken) ? (
+                                <Box opacity="0.25" border="1px solid white" borderRadius="5px" key={i}>
+                                    <Box>{e.symbol}</Box>
+                                    <Box color="whiteAlpha.500">{e.name}</Box>
+                                </Box>
+                            ) : (
+                                <Box _hover={{ bg: 'blue.600' }} border="1px solid white" borderRadius="5px" key={i} onClick={() => onClose(e)}>
+                                    <Box>{e.symbol}</Box>
+                                    <Box color="whiteAlpha.500">{e.name}</Box>
+                                </Box>
+                            )
+                        )}
                     </Box>
                 </ModalBody>
                 <ModalFooter>

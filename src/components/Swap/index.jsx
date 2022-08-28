@@ -30,6 +30,7 @@ import { approveERC20 } from "../../utils/EthersWrap";
 const TokenInput = ({
     tokenSymbol,
     onSelectToken,
+    disabledToken,
     ...props
 }) => {
     const [showModal, setShowModal] = useState(false);
@@ -39,7 +40,7 @@ const TokenInput = ({
             <Button colorScheme="blackAlpha" rightIcon={<ChevronDownIcon />} onClick={() => setShowModal(true)}>
                 {tokenSymbol ?? 'Select Token'}
             </Button>
-            <ModalTokenSelect isOpen={showModal} onSelectToken={(tokenObj) => {
+            <ModalTokenSelect disabledToken={disabledToken} isOpen={showModal} onSelectToken={(tokenObj) => {
                 setShowModal(false);
                 onSelectToken && onSelectToken(tokenObj);
             }} />
@@ -122,7 +123,6 @@ const Swap = () => {
 
     // ----------------- handler -----------------
     const onTokenInvertClick = e => {
-        e.preventDefault();
         let tIn = tokenIn;
         let tOut = tokenOut;
         setTokenIn(tOut);
@@ -146,7 +146,6 @@ const Swap = () => {
     };
 
     const onApproveClicked = async (e) => {
-        // e.preventDefault();
         console.log('onApproveClicked');
         let spender;
         if(bestTrades[selectedTradeIndex].dexName === UNISWAP_V2_NAME) {
@@ -159,7 +158,6 @@ const Swap = () => {
     };
 
     const onSwapClicked = async (e) => {
-        // e.preventDefault();
         console.log('onSwapClicked');
         // await swapToken(trade, tokenIn, tokenInValue, tokenOut, slippageTolerance || '0.5');
     }
@@ -287,6 +285,7 @@ const Swap = () => {
                         value={tokenInValue}
                         onChange={setTokenInValue}
                         onSelectToken={onTokenInSelect}
+                        disabledToken={tokenOut}
                     />
                 </Box>
                 {/* token inversion button */}
@@ -310,6 +309,7 @@ const Swap = () => {
                         value={tokenOutValue}
                         onSelectToken={onTokenOutSelect}
                         isReadOnly={true}
+                        disabledToken={tokenIn}
                     />
                 </Box>
                 <Box h="10px"></Box>
