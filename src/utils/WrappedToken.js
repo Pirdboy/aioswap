@@ -4,7 +4,6 @@ const wrapped = {
 };
 
 function isWrappedToken(tokenA, tokenB) {
-    console.log("debug");
     return wrapped[tokenA.symbol] === tokenB.address || (wrapped[tokenB.symbol] && wrapped[tokenB.symbol] === tokenA.address)
 }
 

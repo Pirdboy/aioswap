@@ -11,7 +11,6 @@ function useBestSwapTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageTole
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        console.log("useBestSwapTrades useEffect");
         if(tokenIn.address === tokenOut.address || !tokenInDisplayAmount || parseFloat(tokenInDisplayAmount) === 0) {
             setError(null);
             setLoading(false);
@@ -20,7 +19,6 @@ function useBestSwapTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageTole
             return;
         }
         if(isWrappedToken(tokenIn, tokenOut)) {
-            console.log('isWrappedToken', tokenIn, tokenOut);
             setError(null);
             setLoading(false);
             setBestTrades(null);
@@ -36,7 +34,6 @@ function useBestSwapTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageTole
                         new SushiSwapTrade(tokenIn, tokenInDisplayAmount, tokenOut, slippageTolerance)
                     ];
                     await Promise.all(trades.map(e => e.computeBestTrade()));
-                    console.log("getBestTrades");
                     trades.sort((e1, e2) => {
                         let amount1 = parseFloat(e1.amountOut);
                         let amount2 = parseFloat(e2.amountOut);
