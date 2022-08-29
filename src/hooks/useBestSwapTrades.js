@@ -16,9 +16,11 @@ function useBestSwapTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageTole
             setError(null);
             setLoading(false);
             setBestTrades(null);
+            setWrappedTokenTrade(null);
             return;
         }
         if(isWrappedToken(tokenIn, tokenOut)) {
+            console.log('isWrappedToken', tokenIn, tokenOut);
             setError(null);
             setLoading(false);
             setBestTrades(null);
@@ -26,6 +28,7 @@ function useBestSwapTrades(tokenIn, tokenInDisplayAmount, tokenOut, slippageTole
         } else {
             const getBestTrades = async () => {
                 try {
+                    setWrappedTokenTrade(null);
                     setError(null);
                     setLoading(true);
                     let trades = [
