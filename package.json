@@ -11,24 +11,35 @@
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
     "@uniswap/sdk": "^3.0.3",
+    "@walletconnect/web3-provider": "^1.8.0",
     "antd": "^4.22.3",
+    "assert": "^2.0.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
     "decimal.js-light": "^2.5.1",
-    "eth-hooks": "^4.6.0",
+    "eth-hooks": "^4.6.2",
     "ethers": "^5.6.2",
     "framer-motion": "^6.5.1",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "process": "^0.11.10",
     "react": "^18.2.0",
+    "react-app-rewired": "^2.2.1",
     "react-dom": "^18.2.0",
     "react-icons": "^4.4.0",
     "react-scripts": "5.0.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0",
     "wagmi": "^0.6.3",
     "web-vitals": "^2.1.4",
-    "web3modal": "^1.9.8"
+    "web3modal": "^1.9.9"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-app-rewired eject"
   },
   "eslintConfig": {
     "extends": [
