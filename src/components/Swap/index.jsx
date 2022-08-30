@@ -151,6 +151,13 @@ const Swap = () => {
     }
 
     // ----------------- Components -----------------
+    let tokenInBalanceStr = tokenIn.symbol === 'ETH' ?
+        TokenBalance.fromRawAmount(ethBalance, 'ether').toString() :
+        TokenBalance.fromRawAmount(tokenInBalance, tokenIn.decimals).toString();
+    let tokenOutBalanceStr = tokenOut.symbol === 'ETH' ?
+        TokenBalance.fromRawAmount(ethBalance, 'ether').toString() :
+        TokenBalance.fromRawAmount(tokenOutBalance, tokenIn.decimals).toString();
+
     let tradesDisplay = null;
     let tokenOutValue = "";
     let tradeDetailDisplay = null;
@@ -274,7 +281,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>From</Center>
-                        <Center>{`Balance ${tokenInBalance.toString()}`}</Center>
+                        <Center>{`Balance ${tokenInBalanceStr}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenIn.symbol}
@@ -298,7 +305,7 @@ const Swap = () => {
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
                         <Center>To</Center>
-                        <Center>{`Balance ${tokenOutBalance.toString()}`}</Center>
+                        <Center>{`Balance ${tokenOutBalanceStr}`}</Center>
                     </Flex>
                     <TokenInput
                         tokenSymbol={tokenOut.symbol}

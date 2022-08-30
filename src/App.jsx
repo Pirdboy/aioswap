@@ -5,7 +5,6 @@ import TestPanel from "./components/TestPanel";
 import Swap from "./components/Swap";
 import { ModalWarning } from "./components/Modal";
 import { Box} from '@chakra-ui/react';
-import { isMetaMaskInstall } from "./utils/EthersWrap";
 
 const Background = ({ children }) => {
     return (
@@ -24,12 +23,6 @@ const App = () => {
 
     const [showMetaMaskWarning, setShowMetaMaskWarning] = useState(false);
     const [showNetworkWarning, setShowNetworkWarning] = useState(false);
-
-    useEffect(() => {
-        if (!isMetaMaskInstall()) {
-            setShowMetaMaskWarning(true);
-        }
-    }, []);
 
     return (
         <Background>

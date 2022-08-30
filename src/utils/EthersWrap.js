@@ -14,28 +14,6 @@ const getChainName = chainId => {
     return ChainIdList[chainId];
 }
 
-const isMetaMaskInstall = () => {
-    return window.ethereum !== undefined;
-}
-
-const checkIfConnectMetaMask = async () => {
-    const { ethereum } = window;
-    if (!ethereum) {
-        throw new Error('MetaMask is not installed')
-    }
-    const accounts = await metaMaskProvider.send('eth_accounts', []);
-    if (accounts.length === 0) {
-        throw new Error('No authorized account found')
-    }
-    const chainId = (await metaMaskProvider.getNetwork()).chainId;
-    console.log('chainId', chainId);
-    console.log('accounts', accounts);
-    return {
-        address: accounts[0],
-        chainId
-    }
-};
-
 const getEthersProvider = () => metaMaskProvider;
 
 const getChainId = async () => {
@@ -119,7 +97,6 @@ const approveERC20 = async (token, displayAmount, spender) => {
 
 
 export {
-    checkIfConnectMetaMask,
     approveERC20,
     getBalance,
     getERC20Balance,
@@ -127,5 +104,4 @@ export {
     getEthersProvider,
     getChainId,
     getChainName,
-    isMetaMaskInstall,
 };
