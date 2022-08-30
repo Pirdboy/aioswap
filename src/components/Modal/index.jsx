@@ -12,7 +12,9 @@ import {
     ModalHeader,
     ModalFooter,
     ModalBody,
-    ModalCloseButton
+    ModalCloseButton,
+    Spinner,
+    Center
 } from '@chakra-ui/react';
 
 import { TokenList, RecommandedTokenList } from "../../constants/TokenList";
@@ -109,5 +111,4 @@ const ModalTokenSelect = ({ isOpen, onSelectToken, disabledToken }) => {
         </Modal>
     )
 };
-
 export { ModalWarning, ModalTokenSelect };

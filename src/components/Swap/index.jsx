@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, Flex, Center, IconButton, Button, Divider, Icon, Text, InputGroup, InputRightElement, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Center, IconButton, Button, Divider, Icon, Text, InputGroup, InputRightElement, Spinner, useToast } from '@chakra-ui/react';
 import {
     Popover,
     PopoverTrigger,
@@ -80,6 +80,19 @@ const Swap = () => {
     const { bestTrades, wrappedTokenTrade, loading: loadingTrades } = useBestSwapTrades(tokenIn, tokenInValue, tokenOut, slippageTolerance || "0.5", cb);
     const { allowances, setForceUpdateAllowance } = useSwapAllowances(tokenIn, account);
 
+    const [swapLoading, setSwapLoading] = useState(false);
+    const [approveLoading, setApproveLoading] = useState(false);
+
+    const toast = useToast();
+    const showSuccessToast = (message) => {
+        toast({
+            description: message,
+            duration: 1500,
+            status: 'success',
+            position: 'top'
+        })
+    }
+
     // ----------------- handler -----------------
     const onTokenInvertClick = e => {
         let tIn = tokenIn;
@@ -106,25 +119,43 @@ const Swap = () => {
 
     const onApproveClicked = async (e) => {
         console.log('onApproveClicked');
-        let spender;
-        if (bestTrades[selectedTradeIndex].dexName === UNISWAP_V2_NAME) {
-            spender = UNISWAP_V2_ROUTER02_ADDRESS;
-        } else if (bestTrades[selectedTradeIndex].dexName === SUSHISWAP_NAME) {
-            spender = SUSHISWAP_ROUTER_ADDRESS;
+        setApproveLoading(true);
+        try {
+            let spender;
+            if (bestTrades[selectedTradeIndex].dexName === UNISWAP_V2_NAME) {
+                spender = UNISWAP_V2_ROUTER02_ADDRESS;
+            } else if (bestTrades[selectedTradeIndex].dexName === SUSHISWAP_NAME) {
+                spender = SUSHISWAP_ROUTER_ADDRESS;
+            }
+            await approveERC20(tokenIn, tokenInValue, spender);
+            setForceUpdateAllowance(true);
+            setApproveLoading(false);
+            showSuccessToast('approve success');
+        } catch (error) {
+            console.log(error);
+            setApproveLoading(false);
         }
-        await approveERC20(tokenIn, tokenInValue, spender);
-        setForceUpdateAllowance(true);
     };
 
     const onSwapClicked = async (e) => {
         console.log('onSwapClicked');
-        if (wrappedTokenTrade) {
-            await wrappedTokenTrade.executeTrade();
-            return;
-        }
-        let selectedTrade = bestTrades?.at(selectedTradeIndex)
-        if (selectedTrade) {
-            await selectedTrade.executeTrade();
+        setSwapLoading(true);
+        try {
+            if (wrappedTokenTrade) {
+                await wrappedTokenTrade.executeTrade();
+            } else {
+                // let selectedTrade = bestTrades?.at(selectedTradeIndex)
+                // if (selectedTrade) {
+                //     await selectedTrade.executeTrade();
+                // }
+                await bestTrades?.at(selectedTradeIndex)?.executeTrade();
+            }
+            setForceUpdateAllowance(true);
+            setSwapLoading(false);
+            showSuccessToast('swap success');
+        } catch (error) {
+            console.log(error);
+            setSwapLoading(false);
         }
     }
 
@@ -138,7 +169,7 @@ const Swap = () => {
             <Flex>
                 <Spinner />
                 <Box w="4px"></Box>
-                <Box>正在获取最优兑换方案...</Box>
+                <Box>finding best trade route...</Box>
             </Flex>
         )
     } else if (bestTrades) {
@@ -176,6 +207,11 @@ const Swap = () => {
     }
 
     let buttonDisplay = null;
+    const swapButton =
+        <Center>
+            <Button onClick={onSwapClicked} isLoading={swapLoading} colorScheme='blue'>Swap</Button>
+        </Center>
+
     const tokenInAmount = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenIn.decimals);
     if (tokenInAmount.eq(TokenBalanceZero)) {
         buttonDisplay = (
@@ -190,23 +226,15 @@ const Swap = () => {
             </Flex>
         );
     } else if (isWrappedToken(tokenIn, tokenOut)) {
-        buttonDisplay = (
-            <Center>
-                <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>
-            </Center>
-        );
+        buttonDisplay = swapButton;
     } else if (loadingTrades || !selectedTrade) {
         buttonDisplay = null;
     } else if (tokenIn.symbol === 'ETH' || tokenInAmount.lte(allowances[selectedTrade.dexName])) {
-        buttonDisplay = (
-            <Center>
-                <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>
-            </Center>
-        );
+        buttonDisplay = swapButton;
     } else {
         buttonDisplay = (
             <Center>
-                <Button onClick={onApproveClicked} colorScheme='blue'>{`Approve ${tokenIn.symbol} Token`}</Button>
+                <Button onClick={onApproveClicked} isLoading={approveLoading} colorScheme='blue'>{`Approve ${tokenIn.symbol} Token`}</Button>
                 <Box w="10px"></Box>
                 <Button isDisabled={true} colorScheme='whiteAlpha'>Swap</Button>
             </Center>
@@ -263,15 +291,17 @@ const Swap = () => {
                     />
                 </Box>
                 {/* token inversion button */}
-                <Box>
+                <Box h="2px"></Box>
+                <Center>
                     <IconButton
+                        colorScheme="gray"
                         aria-label="token inversion"
                         icon={<ArrowDownIcon />}
-                        size="sm"
-                        variant="unstyled"
+                        variant="ghost"
                         onClick={onTokenInvertClick}
                     />
-                </Box>
+                </Center>
+                <Box h="2px"></Box>
                 {/* tokenOut */}
                 <Box border="1px solid rgb(43,46,53)" borderRadius="10px" >
                     <Flex justify="space-between">
