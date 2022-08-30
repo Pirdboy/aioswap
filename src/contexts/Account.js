@@ -1,46 +1,65 @@
 import React, {
     createContext,
-    useReducer,
-    useContext
+    useContext,
+    useState,
+    useCallback,
+    useEffect
 } from 'react'
 
+import { checkIfConnectMetaMask, connectMetaMask, getEthersProvider } from '../utils/EthersWrap';
 
 const AccountContext = createContext();
 function useAccountContext() {
     return useContext(AccountContext);
 }
 
-const initialState = {
-    address: "",
-    chainId: 31337,
-    isConnected: false,
-};
-
-const UPDATE = 'UPDATE';
-
-// reducer里不应该有side effect
-function reducer(state, { type, payload }) {
-    switch (type) {
-        case UPDATE: {
-            return Object.assign({}, state, payload);
-        }
-        default: {
-            throw Error(`Unexpected action type in AccountContext reducer: ${type}`);
-        }
-    }
-}
-
 function Provider({ children }) {
-    const [state, dispatch] = useReducer(reducer, initialState);
-    const contextValue = {
-        ...state,
-        onConnected: (address, chainId) => {
-            dispatch({ type: UPDATE, payload: { address, chainId, isConnected: true } })
-        },
-        onDisconnected: () => {
-            dispatch({ type: UPDATE, payload: { address: '', chainId: 0, isConnected: false } })
+    const [account, setAccount] = useState('');
+
+    const connect = useCallback(async () => {
+        const r = await connectMetaMask();
+        setAccount(r.address);
+    }, []);
+    const disconnect = useCallback(() => {
+        setAccount('')
+    },[]);
+
+    useEffect(() => {
+        const checkConnect = async () => {
+            try {
+                console.log('checkConnect');
+                const r = await checkIfConnectMetaMask();
+                console.log('checkConnect r.address',r.address);
+                setAccount(r.address);
+            } catch (error) {
+                console.log(error);
+                disconnect();
+            }
         }
-    };
+        checkConnect();
+    }, [disconnect]);
+    
+    const onAccountsChanged = useCallback((accounts) => {
+        console.log('onAccountsChanged', accounts);
+        if(!accounts || accounts.length === 0) {
+            disconnect();
+        } else {
+            setAccount(accounts[0]);
+        }
+    }, [disconnect]);
+
+    useEffect(() => {
+        getEthersProvider().provider.on('accountsChanged', onAccountsChanged);
+        return () => {
+            getEthersProvider().provider.removeListener('accountsChanged', onAccountsChanged);
+        }
+    },[onAccountsChanged]);
+
+    const contextValue = {
+        account,
+        connect,
+        disconnect
+    }
     return (
         <AccountContext.Provider value={contextValue}>
             {children}

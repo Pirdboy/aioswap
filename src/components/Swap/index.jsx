@@ -19,7 +19,7 @@ import { DefaultTokenIn, DefaultTokenOut } from "../../constants/TokenList";
 import { UNISWAP_V2_NAME, SUSHISWAP_NAME } from "../../constants/DexName";
 import { UNISWAP_V2_ROUTER02_ADDRESS } from "../../constants/Uniswap";
 import { SUSHISWAP_ROUTER_ADDRESS } from "../../constants/Sushiswap";
-import TokenBalance, {TokenBalanceZero} from "../../utils/TokenBalance";
+import TokenBalance, { TokenBalanceZero } from "../../utils/TokenBalance";
 import { useAccountContext } from "../../contexts/Account";
 import useBestSwapTrades from "../../hooks/useBestSwapTrades";
 import useBalance from "../../hooks/useBalance";
@@ -66,19 +66,19 @@ const SwapChoice = ({
 
 const Swap = () => {
     // ----------------- hooks -----------------
-    const { address, chainId, isConnected } = useAccountContext();
+    const { account } = useAccountContext();
     const [slippageTolerance, setSlippageTolerance] = useState('');
     const [tokenIn, setTokenIn] = useState(DefaultTokenIn);
     const [tokenInValue, setTokenInValue] = useState('');
-    const {balance: tokenInBalance} = useBalance(tokenIn, address, isConnected);
+    const { balance: tokenInBalance } = useBalance(tokenIn, account);
     const [tokenOut, setTokenOut] = useState(DefaultTokenOut);
-    const {balance: tokenOutBalance} = useBalance(tokenOut, address, isConnected);
+    const { balance: tokenOutBalance } = useBalance(tokenOut, account);
     const [selectedTradeIndex, setSelectedTradeIndex] = useState(0);
-    const cb = useCallback(()=>{
+    const cb = useCallback(() => {
         setSelectedTradeIndex(0);
-    },[]);
+    }, []);
     const { bestTrades, wrappedTokenTrade, loading: loadingTrades } = useBestSwapTrades(tokenIn, tokenInValue, tokenOut, slippageTolerance || "0.5", cb);
-    const {allowances, setForceUpdateAllowance} = useSwapAllowances(tokenIn, isConnected, address);
+    const { allowances, setForceUpdateAllowance } = useSwapAllowances(tokenIn, account);
 
     // ----------------- handler -----------------
     const onTokenInvertClick = e => {
@@ -107,9 +107,9 @@ const Swap = () => {
     const onApproveClicked = async (e) => {
         console.log('onApproveClicked');
         let spender;
-        if(bestTrades[selectedTradeIndex].dexName === UNISWAP_V2_NAME) {
+        if (bestTrades[selectedTradeIndex].dexName === UNISWAP_V2_NAME) {
             spender = UNISWAP_V2_ROUTER02_ADDRESS;
-        } else if(bestTrades[selectedTradeIndex].dexName === SUSHISWAP_NAME) {
+        } else if (bestTrades[selectedTradeIndex].dexName === SUSHISWAP_NAME) {
             spender = SUSHISWAP_ROUTER_ADDRESS;
         }
         await approveERC20(tokenIn, tokenInValue, spender);
@@ -118,12 +118,12 @@ const Swap = () => {
 
     const onSwapClicked = async (e) => {
         console.log('onSwapClicked');
-        if(wrappedTokenTrade) {
+        if (wrappedTokenTrade) {
             await wrappedTokenTrade.executeTrade();
             return;
         }
         let selectedTrade = bestTrades?.at(selectedTradeIndex)
-        if(selectedTrade) {
+        if (selectedTrade) {
             await selectedTrade.executeTrade();
         }
     }
@@ -171,13 +171,13 @@ const Swap = () => {
                 </Flex>
             </Box>
         )
-    } else if(wrappedTokenTrade) {
+    } else if (wrappedTokenTrade) {
         tokenOutValue = wrappedTokenTrade.amountOut;
     }
-   
+
     let buttonDisplay = null;
     const tokenInAmount = TokenBalance.fromDisplayAmount(tokenInValue || '0', tokenIn.decimals);
-    if(tokenInAmount.eq(TokenBalanceZero)) {
+    if (tokenInAmount.eq(TokenBalanceZero)) {
         buttonDisplay = (
             <Flex>
                 <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'>Enter Amount</Button>
@@ -189,15 +189,15 @@ const Swap = () => {
                 <Button isDisabled={true} width="100%" color="white" colorScheme='whiteAlpha'> Insufficient {tokenIn.symbol} balance</Button>
             </Flex>
         );
-    } else if(isWrappedToken(tokenIn, tokenOut)) {
+    } else if (isWrappedToken(tokenIn, tokenOut)) {
         buttonDisplay = (
             <Center>
                 <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>
             </Center>
         );
-    } else if(loadingTrades || !selectedTrade) {
+    } else if (loadingTrades || !selectedTrade) {
         buttonDisplay = null;
-    } else if(tokenIn.symbol === 'ETH' || tokenInAmount.lte(allowances[selectedTrade.dexName])) {
+    } else if (tokenIn.symbol === 'ETH' || tokenInAmount.lte(allowances[selectedTrade.dexName])) {
         buttonDisplay = (
             <Center>
                 <Button onClick={onSwapClicked} colorScheme='blue'>Swap</Button>

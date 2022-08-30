@@ -2,7 +2,7 @@ import TokenBalance from './TokenBalance';
 import ERC20ABI from '../abis/ERC20-readable';
 import {ethers} from 'ethers';
 
-const metaMaskProvider = new ethers.providers.Web3Provider(window.ethereum);
+const metaMaskProvider = new ethers.providers.Web3Provider(window.ethereum, 'any');
 
 const ChainIdList = {
     0: 'none',
@@ -28,8 +28,6 @@ const checkIfConnectMetaMask = async () => {
         throw new Error('No authorized account found')
     }
     const chainId = (await metaMaskProvider.getNetwork()).chainId;
-    console.log('chainId', chainId);
-    console.log('accounts', accounts);
     return {
         address: accounts[0],
         chainId

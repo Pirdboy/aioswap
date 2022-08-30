@@ -5,7 +5,7 @@ import { UNISWAP_V2_NAME, SUSHISWAP_NAME } from "../constants/DexName";
 import { TokenBalanceZero } from "../utils/TokenBalance";
 import { getERC20Allowance } from "../utils/EthersWrap";
 
-function useSwapAllowances(token, isConnected, account) {
+function useSwapAllowances(token, account) {
     const [allowances, setAllowances] = useState({
         [UNISWAP_V2_NAME]: TokenBalanceZero,
         [SUSHISWAP_NAME]: TokenBalanceZero,
@@ -14,7 +14,7 @@ function useSwapAllowances(token, isConnected, account) {
 
     useEffect(() => {
         const fetchTokenAllowance = async () => {
-            if(!isConnected) {
+            if(!account) {
                 return;
             }
             if(token.symbol === 'ETH') {
@@ -28,13 +28,13 @@ function useSwapAllowances(token, isConnected, account) {
             });
         };
         fetchTokenAllowance();
-    }, [token, isConnected, account])
+    }, [token, account])
 
-    // forceUpdate, 当token,isConnected,account没有发生变化时仍然需要更新
+    // forceUpdate, 当token,account没有发生变化时仍然需要更新
     // 因此要单独写一个effect
     useEffect(() => {
         const fetchTokenAllowance = async () => {
-            if(!isConnected) {
+            if(!account) {
                 return;
             }
             if(token.symbol === 'ETH') {
