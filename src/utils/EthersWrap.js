@@ -36,15 +36,6 @@ const checkIfConnectMetaMask = async () => {
     }
 };
 
-const connectMetaMask = async () => {
-    const accounts = await metaMaskProvider.send("eth_requestAccounts", []);
-    const chainId = (await metaMaskProvider.getNetwork()).chainId;
-    return {
-        address: accounts[0],
-        chainId
-    };
-};
-
 const getEthersProvider = () => metaMaskProvider;
 
 const getChainId = async () => {
@@ -129,7 +120,6 @@ const approveERC20 = async (token, displayAmount, spender) => {
 
 export {
     checkIfConnectMetaMask,
-    connectMetaMask,
     approveERC20,
     getBalance,
     getERC20Balance,
