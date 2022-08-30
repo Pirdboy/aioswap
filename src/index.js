@@ -1,25 +1,35 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-// import AccountContextProvider from "./contexts/Account";
+import AccountContextProvider from "./contexts/Account";
+import Web3ModalContextProvider from './contexts/Web3Modal';
+import { ChakraProvider } from '@chakra-ui/react';
+import { EthersAppContext } from 'eth-hooks/context';
 
-// function ContextProvider({ children }) {
-//     return (
-//         <AccountContextProvider>
-//             {children}
-//         </AccountContextProvider>
-//     )
-// }
+
+
+function ContextProvider({ children }) {
+    return (
+        <EthersAppContext>
+            <AccountContextProvider>
+            <Web3ModalContextProvider>
+                <ChakraProvider>
+                    {children}
+                </ChakraProvider>
+            </Web3ModalContextProvider>
+            </AccountContextProvider>
+        </EthersAppContext>
+    )
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
-        {/* <ContextProvider> */}
+        <ContextProvider>
             <App />
-        {/* </ContextProvider> */}
+        </ContextProvider>
     </React.StrictMode>
 );
 
