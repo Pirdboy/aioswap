@@ -9,55 +9,60 @@ import {
     MenuList,
     Button
 } from '@chakra-ui/react';
-import { checkIfConnectMetaMask, connectMetaMask } from '../../utils/EthersWrap';
-import { useAccountContext } from "../../contexts/Account"
-import useBalance  from "../../hooks/useBalance";
-import {ETH} from "../../constants/TokenList";
+import { useWeb3ModalContext } from "../../contexts/Web3Modal";
+import { useEthersAppContext } from 'eth-hooks/context';
+import { useBalance } from "eth-hooks";
+import { defaultUpdateOptions } from "eth-hooks/models";
+import TokenBalance from "../../utils/TokenBalance";
+
+// 临时用
+const chainIdList = {
+    '1': 'Ethereum',
+    '31337': 'Hardhat',
+};
 
 function clippedAddress(addr) {
     return addr && addr.slice(0, 6) + '...' + addr.slice(addr.length - 4, addr.length);
 }
 
 const Account = () => {
-    const { address, isConnected, chainId, onConnected, onDisconnected } = useAccountContext();
-    const { balance } = useBalance(ETH, address, isConnected);
-
-    const connectWalletClicked = async (e) => {
-        e.preventDefault();
-        console.log('connectWalletClicked');
-        try {
-            const r = await connectMetaMask();
-            onConnected(r.address, r.chainId);
-        } catch (error) {
-            console.log('error', error);
-        }
-    };
-    const disconnectClicked = (e) => {
-        e.preventDefault();
-        onDisconnected();
-    };
-
-    useEffect(() => {
-        const checkConnect = async () => {
-            try {
-                const r = await checkIfConnectMetaMask();
-                onConnected(r.address, r.chainId);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-        checkConnect();
-    }, []);
+    const { connect, disconnect } = useWeb3ModalContext();
+    const { account, chainId } = useEthersAppContext();
+    const [balance] = useBalance(account, defaultUpdateOptions());
+    // console.log('Account chainId', chainId);  // 十进制数字,比如31337
 
     const height = "36px";
+    let currentNetworkName = chainId ? chainIdList[chainId] : 'Ethereum';
+    let networkDisplay =
+        <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="rgb(226,232,240)" color="blackAlpha.800" >
+            {currentNetworkName}
+        </Center>
 
+    let accountDisplay;
+    if (!account) {
+        accountDisplay =
+            <>
+                <Button colorScheme='blue' size='sm' onClick={connect}>Connect Wallet</Button>
+            </>
+    } else {
+        let balanceStr = TokenBalance.fromRawAmount(balance, 'ether').toString();
+        let addressStr = clippedAddress(account);
+        accountDisplay =
+            <>
+                <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="black" color="white" >{`${balanceStr} ETH`}</Center>
+                <Box w="5px"></Box>
+                <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="gray" color="white">{addressStr}</Center>
+                <Box w="5px"></Box>
+                <Button h={height} colorScheme='yellow' size='sm' onClick={disconnect}>Disconnect</Button>
+            </>
+    }
     return (
         <Center justifyContent="space-between">
-            {/* network choose(暂时先只支持hardhat) */}
-            <Box>
+            {/* network choose(暂时不支持切换) */}
+            {/* <Box>
                 <Menu>
                     <MenuButton as={Button} h={height} rightIcon={<ChevronDownIcon />}>
-                        Hardhat
+                        {currentNetworkName}
                     </MenuButton>
                     <MenuList>
                         <MenuItem>
@@ -68,24 +73,10 @@ const Account = () => {
                         </MenuItem>
                     </MenuList>
                 </Menu>
-            </Box>
+            </Box> */}
+            {networkDisplay}
             <Box w="5px"></Box>
-            {/* Account Info */}
-            {
-                isConnected ? (
-                    <>
-                        <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="black" color="white" >{`${balance.toString()} ETH`}</Center>
-                        <Box w="5px"></Box>
-                        <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="gray" color="white">{clippedAddress(address)}</Center>
-                        <Box w="5px"></Box>
-                        <Button h={height} colorScheme='yellow' size='sm' onClick={disconnectClicked}>Disconnect</Button>
-                    </>
-                ) : (
-                    <>
-                        <Button colorScheme='blue' size='sm' onClick={connectWalletClicked}>Connect Wallet</Button>
-                    </>
-                )
-            }
+            {accountDisplay}
         </Center>
     )
 };

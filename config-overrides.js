@@ -11,11 +11,20 @@ module.exports = function override(config) {
         "url": require.resolve("url")
     })
     config.resolve.fallback = fallback;
-    config.plugins = (config.plugins || []).concat([
-        new webpack.ProvidePlugin({
-            process: 'process/browser',
-            Buffer: ['buffer', 'Buffer']
-        })
-    ])
+    // config.plugins = (config.plugins || []).concat([
+    //     new webpack.ProvidePlugin({
+    //         // process: 'process/browser.js',
+    //         Buffer: ['buffer', 'Buffer']
+    //     }),
+    //     new webpack.ProvidePlugin({
+    //         process: 'process/browser.js',
+    //     }),
+    // ]);
+    config.plugins.push(new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer']
+    }));
+    config.plugins.push(new webpack.ProvidePlugin({
+        process: 'process/browser.js',
+    }));
     return config;
 }
