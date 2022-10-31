@@ -4,22 +4,22 @@ import './index.css';
 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-// import AccountContextProvider from "./contexts/Account";
+import { AccountContextProvider } from './contexts/Account';
 
-// function ContextProvider({ children }) {
-//     return (
-//         <AccountContextProvider>
-//             {children}
-//         </AccountContextProvider>
-//     )
-// }
+function ContextProvider({ children }) {
+    return (
+        <AccountContextProvider>
+            {children}
+        </AccountContextProvider>
+    )
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
-        {/* <ContextProvider> */}
+        <ContextProvider>
             <App />
-        {/* </ContextProvider> */}
+        </ContextProvider>
     </React.StrictMode>
 );
 

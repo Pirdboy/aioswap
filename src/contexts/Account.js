@@ -3,63 +3,114 @@ import React, {
     useContext,
     useState,
     useCallback,
-    useEffect
-} from 'react'
+    useEffect,
+    useMemo
+} from 'react';
 
-import { checkIfConnectMetaMask, connectMetaMask, getEthersProvider } from '../utils/EthersWrap';
+import { ethers } from 'ethers';
 
 const AccountContext = createContext();
+
+/**
+ * @returns {{account, chainId, connect, disconnect, provider, signer}}
+ */
 function useAccountContext() {
     return useContext(AccountContext);
 }
 
-function Provider({ children }) {
+const metaMaskProvider = window.ethereum !== undefined
+    ? new ethers.providers.Web3Provider(window.ethereum, 'any')
+    : null;
+
+function AccountContextProvider({ children }) {
     const [account, setAccount] = useState('');
+    const [chainId, setChainId] = useState(0);
+    const [signer, setSigner] = useState(null);
 
     const connect = useCallback(async () => {
-        const r = await connectMetaMask();
-        setAccount(r.address);
+        if (!metaMaskProvider) {
+            console.error("metamask is not installed");
+            return;
+        }
+        const accounts = await metaMaskProvider.send("eth_requestAccounts", []);
+        const chainId = (await metaMaskProvider.getNetwork()).chainId;
+        setAccount(accounts[0]);
+        setChainId(chainId);
+        setSigner(metaMaskProvider.getSigner());
     }, []);
+
     const disconnect = useCallback(() => {
-        setAccount('')
-    },[]);
+        setAccount('');
+        setChainId(0);
+        setSigner(null);
+    }, []);
+
+    const onChainChanged = useCallback((c) => {
+        const b = ethers.BigNumber.from(c);
+        setChainId(b.toNumber());
+    }, []);
+
+    const onAccountsChanged = useCallback(async (accounts) => {
+        if (!accounts || accounts.length === 0) {
+            setAccount('');
+            setChainId(0);
+            setSigner(null);
+        } else {
+            const chainId = (await metaMaskProvider.getNetwork()).chainId;
+            setAccount(accounts[0]);
+            setChainId(chainId);
+            setSigner(metaMaskProvider.getSigner());
+        }
+        console.log('accountsChanged', accounts);
+    }, []);
+
+    const onDisconnect = useCallback((code, reason) => {
+        console.log('onDisconnect', code, reason);
+        setAccount('');
+        setChainId(0);
+        setSigner(null);
+    }, []);
 
     useEffect(() => {
-        const checkConnect = async () => {
-            try {
-                console.log('checkConnect');
-                const r = await checkIfConnectMetaMask();
-                console.log('checkConnect r.address',r.address);
-                setAccount(r.address);
-            } catch (error) {
-                console.log(error);
-                disconnect();
+        const checkMetamaskConnect = async () => {
+            if (!metaMaskProvider) {
+                console.error('metamask is not installed');
+                return;
+            }
+            const accounts = await metaMaskProvider.send('eth_accounts', []);
+            if (accounts.length === 0) {
+                return;
+            }
+            const chainId = (await metaMaskProvider.getNetwork()).chainId;
+            setAccount(accounts[0]);
+            setChainId(chainId);
+            setSigner(metaMaskProvider.getSigner());
+        };
+        checkMetamaskConnect();
+    }, []);
+
+    useEffect(() => {
+        if (metaMaskProvider) {
+            metaMaskProvider.provider.on('accountsChanged', onAccountsChanged);
+            metaMaskProvider.provider.on('chainChanged', onChainChanged);
+            metaMaskProvider.provider.on('disconnect', onDisconnect);
+            return () => {
+                metaMaskProvider.provider.removeListener('accountsChanged', onAccountsChanged);
+                metaMaskProvider.provider.removeListener('chainChanged', onChainChanged);
+                metaMaskProvider.provider.removeListener('disconnect', onDisconnect);
             }
         }
-        checkConnect();
-    }, [disconnect]);
-    
-    const onAccountsChanged = useCallback((accounts) => {
-        console.log('onAccountsChanged', accounts);
-        if(!accounts || accounts.length === 0) {
-            disconnect();
-        } else {
-            setAccount(accounts[0]);
-        }
-    }, [disconnect]);
+    }, [onAccountsChanged, onChainChanged, onDisconnect]);
 
-    useEffect(() => {
-        getEthersProvider().provider.on('accountsChanged', onAccountsChanged);
-        return () => {
-            getEthersProvider().provider.removeListener('accountsChanged', onAccountsChanged);
-        }
-    },[onAccountsChanged]);
-
-    const contextValue = {
+    const contextValue = useMemo(() => ({
         account,
+        chainId,
         connect,
-        disconnect
-    }
+        disconnect,
+        provider: metaMaskProvider,
+        signer
+    }), [account, chainId, connect, disconnect, signer]);
+
     return (
         <AccountContext.Provider value={contextValue}>
             {children}
@@ -67,7 +118,7 @@ function Provider({ children }) {
     )
 }
 
-export default Provider;
 export {
+    AccountContextProvider,
     useAccountContext
-};
+}

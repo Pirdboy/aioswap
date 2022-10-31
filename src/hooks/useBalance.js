@@ -25,9 +25,13 @@ function useBalance(token, account) {
     }, [fetchBalance]);
 
     useEffect(() => {
-        getEthersProvider().on('block', fetchBalance);
+        const metaMaskProvider = getEthersProvider();
+        if(!metaMaskProvider) {
+            return;
+        }
+        metaMaskProvider.on('block', fetchBalance);
         return () => {
-            getEthersProvider().off('block', fetchBalance);
+            metaMaskProvider.off('block', fetchBalance);
         }
     },[fetchBalance])
 

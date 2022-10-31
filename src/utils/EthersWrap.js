@@ -1,12 +1,15 @@
 import TokenBalance from './TokenBalance';
 import ERC20ABI from '../abis/ERC20-readable';
-import {ethers} from 'ethers';
+import { ethers } from 'ethers';
 
-const metaMaskProvider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+const metaMaskProvider = window.ethereum
+    ? new ethers.providers.Web3Provider(window.ethereum, 'any')
+    : null;
 
 const ChainIdList = {
     0: 'none',
-    1: 'Mainnet',
+    1: 'mainnet',
+    5: 'goerli',
     31337: 'hardhat',
 };
 
@@ -17,31 +20,6 @@ const getChainName = chainId => {
 const isMetaMaskInstall = () => {
     return window.ethereum !== undefined;
 }
-
-const checkIfConnectMetaMask = async () => {
-    const { ethereum } = window;
-    if (!ethereum) {
-        throw new Error('MetaMask is not installed')
-    }
-    const accounts = await metaMaskProvider.send('eth_accounts', []);
-    if (accounts.length === 0) {
-        throw new Error('No authorized account found')
-    }
-    const chainId = (await metaMaskProvider.getNetwork()).chainId;
-    return {
-        address: accounts[0],
-        chainId
-    }
-};
-
-const connectMetaMask = async () => {
-    const accounts = await metaMaskProvider.send("eth_requestAccounts", []);
-    const chainId = (await metaMaskProvider.getNetwork()).chainId;
-    return {
-        address: accounts[0],
-        chainId
-    };
-};
 
 const getEthersProvider = () => metaMaskProvider;
 
@@ -111,8 +89,8 @@ const approveERC20 = async (token, displayAmount, spender) => {
     if (!token?.address) {
         throw new Error('approveRouter token.address undefined');
     }
-    if(!displayAmount) {
-        throw new Error('approveRouter displayAmount invalid',displayAmount);
+    if (!displayAmount) {
+        throw new Error('approveRouter displayAmount invalid', displayAmount);
     }
     const signer = metaMaskProvider.getSigner();
     const contract = new ethers.Contract(token.address, ERC20ABI, signer);
@@ -126,8 +104,6 @@ const approveERC20 = async (token, displayAmount, spender) => {
 
 
 export {
-    checkIfConnectMetaMask,
-    connectMetaMask,
     approveERC20,
     getBalance,
     getERC20Balance,

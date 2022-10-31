@@ -47,6 +47,9 @@ class SushiSwapTrade {
 
     async executeTrade() {
         const ethersProvider = getEthersProvider();
+        if(!ethersProvider) {
+            return;
+        }
         const signer = ethersProvider.getSigner();
         const toAddress = await signer.getAddress();
         const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 最多等20分钟

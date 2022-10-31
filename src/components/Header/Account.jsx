@@ -10,22 +10,21 @@ import {
     Button
 } from '@chakra-ui/react';
 import { useAccountContext } from "../../contexts/Account"
-import useBalance  from "../../hooks/useBalance";
-import useChainId from "../../hooks/useChainId";
-import {ETH} from "../../constants/TokenList";
+import useBalance from "../../hooks/useBalance";
+import { ETH } from "../../constants/TokenList";
 
 function clippedAddress(addr) {
     return addr && addr.slice(0, 6) + '...' + addr.slice(addr.length - 4, addr.length);
 }
 
 const chainIdList = {
-    "1" : "Ethereum",
-    "31337": "Hardhat"
+    "1": "mainnet",
+    "5": "goerli",
+    "31337": "hardhat"
 }
 
 const Account = () => {
-    const { account, connect, disconnect } = useAccountContext();
-    const chainId2 = useChainId();
+    const { account, chainId, connect, disconnect } = useAccountContext();
     const { balance } = useBalance(ETH, account);
     const height = "36px";
 
@@ -34,7 +33,7 @@ const Account = () => {
             {/* network choose(暂时先只支持hardhat) */}
             <Box>
                 <Center h={height} pl="10px" pr="10px" borderRadius="10px" bg="black" color="white" >
-                    {`network: ${chainIdList[chainId2]}`}
+                    {`network: ${chainIdList[chainId]}`}
                 </Center>
             </Box>
             <Box w="5px"></Box>
